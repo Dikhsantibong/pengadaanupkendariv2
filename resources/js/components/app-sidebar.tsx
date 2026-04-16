@@ -4,7 +4,7 @@ import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { TeamSwitcher } from '@/components/team-switcher';
+
 import {
     Sidebar,
     SidebarContent,
@@ -19,17 +19,30 @@ import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const dashboardUrl = page.props.currentTeam
-        ? dashboard(page.props.currentTeam.slug)
-        : '/';
+    const dashboardUrl = '/dashboard';
 
-    const mainNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboardUrl,
-            icon: LayoutGrid,
-        },
-    ];
+    const userRole = (page.props.auth as any)?.user?.role;
+
+    const mainNavItems: NavItem[] = userRole === 'asmen' 
+        ? [
+            {
+                title: 'Dashboard Asmen',
+                href: '/asmen/dashboard',
+                icon: LayoutGrid,
+            }
+        ] 
+        : [
+            {
+                title: 'Dashboard',
+                href: dashboardUrl,
+                icon: LayoutGrid,
+            },
+            {
+                title: 'List Pengadaan',
+                href: '/pengadaan',
+                icon: BookOpen,
+            }
+        ];
 
     const footerNavItems: NavItem[] = [
         {
@@ -56,11 +69,7 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <TeamSwitcher />
-                    </SidebarMenuItem>
-                </SidebarMenu>
+
             </SidebarHeader>
 
             <SidebarContent>
