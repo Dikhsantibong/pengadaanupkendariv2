@@ -11,10 +11,14 @@ Route::inertia('/', 'welcome', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        if (auth()->user()->role === 'asmen') {
+        $role = auth()->user()->role;
+        if ($role === 'asmen') {
             return redirect()->route('asmen.dashboard');
         }
-        return inertia('dashboard');
+        if ($role === 'pelaksana') {
+            return inertia('pelaksana/dashboard');
+        }
+        return inertia('perencana/dashboard');
     })->name('dashboard');
     Route::inertia('pengadaan', 'pengadaan/index')->name('pengadaan.index');
     Route::inertia('pengadaan/1', 'pengadaan/show')->name('pengadaan.show');
