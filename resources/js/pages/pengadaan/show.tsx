@@ -1,179 +1,226 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
-import { useState, useMemo } from 'react';
+import { CheckCircle2, Clock, FileText, Lock, TrendingUp } from 'lucide-react';
 
-// Custom Progress for local use
-const Progress = ({ value, className }: { value: number; className?: string }) => (
-    <div className={`relative h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 ${className}`}>
-        <div className="h-full bg-blue-600 transition-all dark:bg-blue-500" style={{ width: `${value}%` }} />
-    </div>
-);
+type ChecklistItem = {
+    id: number;
+    nama: string;
+    fase: 'perencanaan' | 'pelaksanaan';
+    is_checked: boolean;
+    checked_at: string | null;
+    checked_by_user?: { name: string } | null;
+};
 
-const PERENCANAAN_ITEMS = [
-    { id: 'nota_dinas', label: 'Nota Dinas Usulan' },
-    { id: 'tor', label: 'TOR' },
-    { id: 'rab', label: 'RAB' },
-    { id: 'penawaran', label: 'Penawaran' },
-    { id: 'csms', label: 'CSMS' },
-    { id: 'nd_perintah', label: 'Nota Dinas Perintah Pekerjaan' },
-    { id: 'hpe', label: 'HPE' },
-    { id: 'upb', label: 'UPB' },
-    { id: 'rks', label: 'RKS' },
-    { id: 'smart_scm', label: 'Smart SCM' },
-    { id: 'pr_ro', label: 'PR / RO' },
-];
+type PengadaanData = {
+    id: number;
+    nama: string;
+    status: 'perencanaan' | 'pelaksanaan' | 'selesai';
+    progress: number;
+    created_at: string;
+    creator?: { name: string };
+    checklists: ChecklistItem[];
+};
 
-const PELAKSANAAN_ITEMS = [
-    { id: 'evaluasi', label: 'Evaluasi Dokumen' },
-    { id: 'hps', label: 'Penyusunan HPS' },
-    { id: 'progress', label: 'Progress Pengadaan' },
-    { id: 'ba', label: 'Berita Acara' },
-    { id: 'susun_kontrak', label: 'Penyusunan Kontrak' },
-    { id: 'po', label: 'Purchase Order' },
-    { id: 'kontrak', label: 'Kontrak' },
-    { id: 'durasi', label: 'Durasi Pekerjaan' },
-    { id: 'amandemen', label: 'Amandemen' },
-];
+type Props = {
+    pengadaan: PengadaanData;
+};
 
-export default function PengadaanShow() {
-    // Initial state: let's pretend some are already checked
-    const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({
-        'nota_dinas': true,
-        'tor': true,
-        'rab': true,
-    });
+const statusColors: Record<string, string> = {
+    perencanaan: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+    pelaksanaan: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
+    selesai: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+};
 
-    const totalItems = PERENCANAAN_ITEMS.length + PELAKSANAAN_ITEMS.length;
-    const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-    const progressPercent = Math.round((checkedCount / totalItems) * 100);
+const statusLabels: Record<string, string> = {
+    perencanaan: 'Perencanaan',
+    pelaksanaan: 'Pelaksanaan',
+    selesai: 'Selesai',
+};
 
-    const isPerencanaanDone = PERENCANAAN_ITEMS.every(item => checkedItems[item.id]);
-    const isPelaksanaanDone = PELAKSANAAN_ITEMS.every(item => checkedItems[item.id]);
+const statusIcons: Record<string, any> = {
+    perencanaan: Clock,
+    pelaksanaan: TrendingUp,
+    selesai: CheckCircle2,
+};
 
-    const status = useMemo(() => {
-        if (checkedCount === 0) return 'Dibuat';
-        if (progressPercent === 100) return 'Selesai';
-        if (isPerencanaanDone) return 'Pelaksanaan';
-        return 'Perencanaan';
-    }, [checkedCount, progressPercent, isPerencanaanDone]);
+export default function PengadaanShow({ pengadaan }: Props) {
+    const page = usePage();
+    const userRole = (page.props.auth as any)?.user?.role;
 
-    const statusColor = useMemo(() => {
-        if (status === 'Selesai') return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400';
-        if (status === 'Pelaksanaan') return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400';
-        if (status === 'Perencanaan') return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400';
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-400';
-    }, [status]);
+    const perencanaanItems = pengadaan.checklists.filter(c => c.fase === 'perencanaan');
+    const pelaksanaanItems = pengadaan.checklists.filter(c => c.fase === 'pelaksanaan');
 
-    const handleToggle = (id: string, checked: boolean) => {
-        setCheckedItems(prev => ({
-            ...prev,
-            [id]: checked
-        }));
+    const perencanaanChecked = perencanaanItems.filter(c => c.is_checked).length;
+    const pelaksanaanChecked = pelaksanaanItems.filter(c => c.is_checked).length;
+
+    const handleToggle = (checklistId: number) => {
+        router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, {
+            preserveScroll: true,
+        });
     };
 
-    const todayStr = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date());
+    const canTogglePerencanaan = userRole === 'perencana' && pengadaan.status === 'perencanaan';
+    const canTogglePelaksanaan = userRole === 'pelaksana' && pengadaan.status === 'pelaksanaan';
+
+    const StatusIcon = statusIcons[pengadaan.status];
 
     return (
         <>
-            <Head title="Detail Pengadaan" />
+            <Head title={`Detail — ${pengadaan.nama}`} />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-y-auto rounded-xl p-4 md:p-8">
-                
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between border-b pb-6 dark:border-gray-800">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Pengadaan Server Data Center</h1>
-                            <Badge variant="outline" className={statusColor}>
-                                {status}
-                            </Badge>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Dibuat pada: 10 Okt 2026</p>
-                    </div>
 
-                    <div className="flex flex-col w-full md:w-64 gap-2 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-100 dark:border-gray-800 shadow-sm">
-                        <div className="flex justify-between items-center text-sm font-medium">
-                            <span className="text-gray-600 dark:text-gray-300">Progress Keseluruhan</span>
-                            <span className="text-blue-600 dark:text-blue-400 text-lg">{progressPercent}%</span>
-                        </div>
-                        <Progress value={progressPercent} />
-                        <p className="text-xs text-gray-500 text-right mt-1">{checkedCount} dari {totalItems} selesai</p>
+                {/* Header */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{pengadaan.nama}</h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Dibuat oleh <span className="font-medium">{pengadaan.creator?.name}</span> pada{' '}
+                            {new Date(pengadaan.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </p>
                     </div>
+                    <Badge className={`${statusColors[pengadaan.status]} px-3 py-1 text-sm`}>
+                        <StatusIcon className="mr-1.5 h-4 w-4" />
+                        {statusLabels[pengadaan.status]}
+                    </Badge>
                 </div>
 
+                {/* Progress Overview */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium">Progress Keseluruhan</span>
+                            <span className="text-2xl font-bold">{pengadaan.progress}%</span>
+                        </div>
+                        <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div
+                                className={`h-full transition-all duration-500 ${
+                                    pengadaan.progress === 100 ? 'bg-emerald-500' :
+                                    pengadaan.progress >= 50 ? 'bg-orange-500' : 'bg-sky-500'
+                                }`}
+                                style={{ width: `${pengadaan.progress}%` }}
+                            />
+                        </div>
+                        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                            <span>Perencanaan: {perencanaanChecked}/{perencanaanItems.length}</span>
+                            <span>Pelaksanaan: {pelaksanaanChecked}/{pelaksanaanItems.length}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Checklist Sections */}
                 <div className="grid gap-6 md:grid-cols-2">
-                    {/* Perencanaan */}
-                    <Card className={`transition-all duration-300 ${isPerencanaanDone ? 'opacity-80' : 'ring-2 ring-blue-500/20'}`}>
-                        <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-900/50 dark:border-slate-800/50">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs text-white ${isPerencanaanDone ? 'bg-emerald-500' : 'bg-blue-500'}`}>1</span>
-                                Proses Perencanaan
-                            </CardTitle>
-                            <CardDescription>Tahap awal persiapan dokumen teknis dan administratif</CardDescription>
+
+                    {/* Perencanaan Checklist */}
+                    <Card className={`${pengadaan.status === 'perencanaan' ? 'ring-2 ring-sky-500/30' : ''}`}>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <FileText className="h-5 w-5 text-sky-600" />
+                                        Checklist Perencanaan
+                                    </CardTitle>
+                                    <CardDescription className="mt-1">
+                                        {perencanaanChecked}/{perencanaanItems.length} item selesai
+                                    </CardDescription>
+                                </div>
+                                {perencanaanChecked === perencanaanItems.length && perencanaanItems.length > 0 && (
+                                    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                        <CheckCircle2 className="mr-1 h-3 w-3" /> Selesai
+                                    </Badge>
+                                )}
+                            </div>
                         </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="flex flex-col gap-4">
-                                {PERENCANAAN_ITEMS.map((item) => (
-                                    <div key={item.id} className="flex items-start gap-3 group">
-                                        <Checkbox 
-                                            id={item.id} 
-                                            checked={!!checkedItems[item.id]}
-                                            onCheckedChange={(c) => handleToggle(item.id, c as boolean)}
-                                            className="mt-1 h-5 w-5 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                        <CardContent>
+                            <div className="flex flex-col gap-1">
+                                {perencanaanItems.map((item, idx) => (
+                                    <div
+                                        key={item.id}
+                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
+                                            item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'
+                                        }`}
+                                    >
+                                        <Checkbox
+                                            id={`perencanaan-${item.id}`}
+                                            checked={item.is_checked}
+                                            disabled={!canTogglePerencanaan}
+                                            onCheckedChange={() => handleToggle(item.id)}
                                         />
-                                        <div className="grid gap-1.5 flex-1">
-                                            <Label 
-                                                htmlFor={item.id} 
-                                                className={`text-sm font-medium leading-none cursor-pointer group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors ${checkedItems[item.id] ? 'line-through text-gray-400 dark:text-gray-500' : ''}`}
-                                            >
-                                                {item.label}
-                                            </Label>
-                                            {checkedItems[item.id] && (
-                                                <p className="text-xs text-emerald-600 dark:text-emerald-400 opacity-80">Selesai pada {todayStr}</p>
-                                            )}
-                                        </div>
+                                        <label
+                                            htmlFor={`perencanaan-${item.id}`}
+                                            className={`flex-1 text-sm cursor-pointer select-none ${
+                                                item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'
+                                            }`}
+                                        >
+                                            {idx + 1}. {item.nama}
+                                        </label>
+                                        {!canTogglePerencanaan && !item.is_checked && pengadaan.status !== 'perencanaan' && (
+                                            <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Pelaksanaan */}
-                    <Card className={`transition-all duration-300 ${!isPerencanaanDone ? 'opacity-60 grayscale-[30%]' : 'ring-2 ring-blue-500/20'} ${isPelaksanaanDone ? 'opacity-80 grayscale-0 ring-0' : ''}`}>
-                        <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-900/50 dark:border-slate-800/50">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs text-white ${isPelaksanaanDone ? 'bg-emerald-500' : (!isPerencanaanDone ? 'bg-gray-400' : 'bg-blue-500')}`}>2</span>
-                                Proses Pelaksanaan
-                            </CardTitle>
-                            <CardDescription>Tahap eksekusi dan penyelesaian kontrak kerja</CardDescription>
+                    {/* Pelaksanaan Checklist */}
+                    <Card className={`${pengadaan.status === 'pelaksanaan' ? 'ring-2 ring-orange-500/30' : ''}`}>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <TrendingUp className="h-5 w-5 text-orange-600" />
+                                        Checklist Pelaksanaan
+                                    </CardTitle>
+                                    <CardDescription className="mt-1">
+                                        {pelaksanaanChecked}/{pelaksanaanItems.length} item selesai
+                                    </CardDescription>
+                                </div>
+                                {pelaksanaanChecked === pelaksanaanItems.length && pelaksanaanItems.length > 0 && (
+                                    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                        <CheckCircle2 className="mr-1 h-3 w-3" /> Selesai
+                                    </Badge>
+                                )}
+                            </div>
                         </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="flex flex-col gap-4">
-                                {PELAKSANAAN_ITEMS.map((item) => (
-                                    <div key={item.id} className="flex items-start gap-3 group">
-                                        <Checkbox 
-                                            id={item.id} 
-                                            disabled={!isPerencanaanDone}
-                                            checked={!!checkedItems[item.id]}
-                                            onCheckedChange={(c) => handleToggle(item.id, c as boolean)}
-                                            className="mt-1 h-5 w-5 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                                        />
-                                        <div className="grid gap-1.5 flex-1">
-                                            <Label 
-                                                htmlFor={item.id} 
-                                                className={`text-sm font-medium leading-none ${!isPerencanaanDone ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'} ${checkedItems[item.id] ? 'line-through text-gray-400 dark:text-gray-500 group-hover:text-gray-400' : ''}`}
+                        <CardContent>
+                            {pengadaan.status === 'perencanaan' ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                                    <Lock className="h-8 w-8 mb-3 opacity-40" />
+                                    <p className="font-medium">Checklist Terkunci</p>
+                                    <p className="text-xs mt-1">Selesaikan semua checklist Perencanaan terlebih dahulu.</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-1">
+                                    {pelaksanaanItems.map((item, idx) => (
+                                        <div
+                                            key={item.id}
+                                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
+                                                item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'
+                                            }`}
+                                        >
+                                            <Checkbox
+                                                id={`pelaksanaan-${item.id}`}
+                                                checked={item.is_checked}
+                                                disabled={!canTogglePelaksanaan}
+                                                onCheckedChange={() => handleToggle(item.id)}
+                                            />
+                                            <label
+                                                htmlFor={`pelaksanaan-${item.id}`}
+                                                className={`flex-1 text-sm cursor-pointer select-none ${
+                                                    item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'
+                                                }`}
                                             >
-                                                {item.label}
-                                            </Label>
-                                            {checkedItems[item.id] && (
-                                                <p className="text-xs text-emerald-600 dark:text-emerald-400 opacity-80">Selesai pada {todayStr}</p>
+                                                {idx + 1}. {item.nama}
+                                            </label>
+                                            {item.is_checked && item.checked_by_user && (
+                                                <span className="text-xs text-muted-foreground">oleh {item.checked_by_user.name}</span>
                                             )}
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -182,21 +229,10 @@ export default function PengadaanShow() {
     );
 }
 
-PengadaanShow.layout = () => {
-    return {
-        breadcrumbs: [
-            {
-                title: 'Dashboard',
-                href: '/dashboard',
-            },
-            {
-                title: 'List Pengadaan',
-                href: `/pengadaan`,
-            },
-            {
-                title: 'Detail',
-                href: '#',
-            },
-        ],
-    };
-};
+PengadaanShow.layout = () => ({
+    breadcrumbs: [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'List Pengadaan', href: '/pengadaan' },
+        { title: 'Detail', href: '#' },
+    ],
+});
