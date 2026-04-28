@@ -25,10 +25,48 @@ class DatabaseSeeder extends Seeder
             'role' => 'pelaksana',
         ]);
 
+        // Asmen per-bidang
         User::factory()->create([
-            'name' => 'Asmen',
-            'email' => 'asmen@example.com',
-            'role' => 'asmen',
+            'name' => 'Asmen Pemeliharaan',
+            'email' => 'asmen.pemeliharaan@example.com',
+            'role' => 'asmen_pemeliharaan',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Asmen Operasi',
+            'email' => 'asmen.operasi@example.com',
+            'role' => 'asmen_operasi',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Asmen Engineering',
+            'email' => 'asmen.engineering@example.com',
+            'role' => 'asmen_engineering',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Asmen Business Support',
+            'email' => 'asmen.bs@example.com',
+            'role' => 'asmen_business_support',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Asmen K3',
+            'email' => 'asmen.k3@example.com',
+            'role' => 'asmen_k3',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Asmen Lingkungan',
+            'email' => 'asmen.lingkungan@example.com',
+            'role' => 'asmen_lingkungan',
+        ]);
+
+        // Manager (Super Admin)
+        User::factory()->create([
+            'name' => 'Manager',
+            'email' => 'manager@example.com',
+            'role' => 'manager',
         ]);
     }
 }

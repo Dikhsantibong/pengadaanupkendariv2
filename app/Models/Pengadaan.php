@@ -4,11 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 
 class Pengadaan extends Model
 {
-    protected $fillable = ['nama', 'status', 'progress', 'created_by'];
+    protected $fillable = [
+        'nama', 'status', 'progress', 'created_by',
+        'tanggal_mulai', 'tanggal_selesai',
+        'amandemen_keterangan', 'amandemen_tanggal',
+        'jaminan_bank_nama', 'jaminan_bank_nomor', 'jaminan_bank_nilai', 'jaminan_bank_berlaku_sampai',
+        'pemeliharaan_durasi_hari', 'pemeliharaan_mulai', 'pemeliharaan_selesai', 'pemeliharaan_keterangan',
+    ];
+
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+        'amandemen_tanggal' => 'date',
+        'jaminan_bank_nilai' => 'decimal:2',
+        'jaminan_bank_berlaku_sampai' => 'date',
+        'pemeliharaan_durasi_hari' => 'integer',
+        'pemeliharaan_mulai' => 'date',
+        'pemeliharaan_selesai' => 'date',
+    ];
 
     public function creator(): BelongsTo
     {
@@ -30,8 +49,32 @@ class Pengadaan extends Model
         return $this->hasMany(PengadaanChecklist::class)->where('fase', 'pelaksanaan')->orderBy('urutan');
     }
 
+    public function direksiUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'pengadaan_direksi')->withTimestamps();
+    }
+
+    public function isNearDeadline(int $daysBeforeWarning = 7): bool
+    {
+        if (!$this->tanggal_selesai) {
+            return false;
+        }
+        $now = Carbon::now();
+        return $now->lte($this->tanggal_selesai) && $now->diffInDays($this->tanggal_selesai) <= $daysBeforeWarning;
+    }
+
+    public function isPemeliharaanNearDeadline(int $daysBeforeWarning = 7): bool
+    {
+        if (!$this->pemeliharaan_selesai) {
+            return false;
+        }
+        $now = Carbon::now();
+        return $now->lte($this->pemeliharaan_selesai) && $now->diffInDays($this->pemeliharaan_selesai) <= $daysBeforeWarning;
+    }
+
     /**
-     * Recalculate progress and auto-update status
+     * Recalculate progress and auto-update status.
+     * Only 3 statuses: perencanaan → pelaksanaan → selesai
      */
     public function recalculateProgress(): void
     {
@@ -40,7 +83,6 @@ class Pengadaan extends Model
 
         $this->progress = $totalChecklists > 0 ? round(($checkedCount / $totalChecklists) * 100) : 0;
 
-        // Auto status transition
         $perencanaanTotal = $this->checklistsPerencanaan()->count();
         $perencanaanChecked = $this->checklistsPerencanaan()->where('is_checked', true)->count();
         $pelaksanaanTotal = $this->checklistsPelaksanaan()->count();
@@ -59,6 +101,7 @@ class Pengadaan extends Model
 
     /**
      * Create default checklists when a new pengadaan is created.
+     * Masa Pemeliharaan is the LAST item in pelaksanaan fase.
      */
     public static function createWithChecklists(string $nama, int $userId): self
     {
@@ -83,6 +126,7 @@ class Pengadaan extends Model
             'PR / RO',
         ];
 
+        // Pemeliharaan is the last step inside pelaksanaan
         $pelaksanaanItems = [
             'Evaluasi Dokumen',
             'Penyusunan HPS',
@@ -90,9 +134,11 @@ class Pengadaan extends Model
             'Berita Acara',
             'Penyusunan Kontrak',
             'Purchase Order',
+            'Jaminan Bank',
             'Kontrak',
-            'Durasi Pekerjaan',
+            'Rentang Waktu',
             'Amandemen',
+            'Masa Pemeliharaan',
         ];
 
         $urutan = 1;

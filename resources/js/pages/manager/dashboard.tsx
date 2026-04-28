@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Eye, FolderKanban, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Clock, Eye, FolderKanban, Shield, TrendingUp, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 
@@ -15,12 +15,15 @@ type Pengadaan = {
     creator?: { name: string };
     checklists_count: number;
     checked_count: number;
+    direksi_users?: { id: number; name: string; role: string }[];
 };
+
+type AsmenSummary = { id: number; name: string; role: string; label: string; assigned_count: number };
 
 type Props = {
     stats: { total: number; perencanaan: number; pelaksanaan: number; selesai: number };
     pengadaans: Pengadaan[];
-    bidang: string;
+    asmenSummary: AsmenSummary[];
 };
 
 const statusColors: Record<string, string> = {
@@ -30,27 +33,27 @@ const statusColors: Record<string, string> = {
 };
 const statusLabels: Record<string, string> = { perencanaan: 'Perencanaan', pelaksanaan: 'Pelaksanaan', selesai: 'Selesai' };
 
-export default function AsmenDashboard({ stats, pengadaans, bidang }: Props) {
+export default function ManagerDashboard({ stats, pengadaans, asmenSummary }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const filtered = pengadaans.filter((p) => p.nama.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filtered = pengadaans.filter(p => p.nama.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <>
-            <Head title={`Dashboard ${bidang}`} />
+            <Head title="Dashboard Manager — Super Admin" />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-y-auto rounded-xl p-4 md:p-8">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Monitoring Pengadaan</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{bidang} — Pengadaan yang ditugaskan kepada Anda.</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Dashboard Manager</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Super Admin — Pantau semua data pengadaan secara menyeluruh.</p>
                     </div>
-                    <Badge variant="outline" className="w-fit border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-                        <Eye className="mr-1 h-3 w-3" />{bidang}
+                    <Badge variant="outline" className="w-fit border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                        <Shield className="mr-1 h-3 w-3" />Super Admin
                     </Badge>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Ditugaskan</CardTitle><FolderKanban className="h-4 w-4 text-blue-600" /></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle><FolderKanban className="h-4 w-4 text-blue-600" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-yellow-500">
@@ -68,23 +71,34 @@ export default function AsmenDashboard({ stats, pengadaans, bidang }: Props) {
                 </div>
 
                 <Card>
+                    <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-indigo-600" />Ringkasan Asmen</CardTitle><CardDescription>Jumlah pengadaan yang ditugaskan ke setiap Asmen</CardDescription></CardHeader>
+                    <CardContent>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {asmenSummary.map(a => (
+                                <div key={a.id} className="flex items-center justify-between rounded-lg border p-3">
+                                    <div><div className="font-medium text-sm">{a.name}</div><div className="text-xs text-muted-foreground">{a.label}</div></div>
+                                    <Badge variant="secondary">{a.assigned_count} pengadaan</Badge>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
                     <CardHeader>
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div><CardTitle>Pengadaan Ditugaskan</CardTitle><CardDescription>Daftar pengadaan yang Anda ditunjuk sebagai direksi pekerjaan</CardDescription></div>
-                            <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari pengadaan..." className="md:w-64" />
+                            <div><CardTitle>Semua Pengadaan</CardTitle><CardDescription>Data lengkap dari semua role</CardDescription></div>
+                            <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Cari pengadaan..." className="md:w-64" />
                         </div>
                     </CardHeader>
                     <CardContent>
                         {filtered.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <p>Belum ada pengadaan yang ditugaskan kepada Anda.</p>
-                                <p className="text-xs mt-1">Perencana akan menugaskan pengadaan pada tahap Nota Dinas.</p>
-                            </div>
+                            <div className="text-center py-8 text-muted-foreground"><p>Tidak ada data ditemukan.</p></div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead><tr className="border-b text-left text-muted-foreground">
-                                        <th className="px-4 py-3 font-medium">No</th><th className="px-4 py-3 font-medium">Nama Pengadaan</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 font-medium">Progress</th><th className="px-4 py-3 font-medium">Dibuat oleh</th><th className="px-4 py-3 font-medium">Tanggal</th><th className="px-4 py-3 font-medium text-right">Aksi</th>
+                                        <th className="px-4 py-3 font-medium">No</th><th className="px-4 py-3 font-medium">Nama</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 font-medium">Progress</th><th className="px-4 py-3 font-medium">Direksi</th><th className="px-4 py-3 font-medium">Dibuat</th><th className="px-4 py-3 font-medium text-right">Aksi</th>
                                     </tr></thead>
                                     <tbody>
                                         {filtered.map((item, idx) => (
@@ -98,9 +112,9 @@ export default function AsmenDashboard({ stats, pengadaans, bidang }: Props) {
                                                         <span className="text-xs font-medium">{item.progress}%</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 text-muted-foreground">{item.creator?.name || '-'}</td>
+                                                <td className="px-4 py-3 text-xs text-muted-foreground">{item.direksi_users?.map(u => u.name).join(', ') || '-'}</td>
                                                 <td className="px-4 py-3 text-muted-foreground">{new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                                                <td className="px-4 py-3 text-right"><Button variant="ghost" size="sm" asChild><Link href={`/pengadaan/${item.id}`}><Eye className="mr-1 h-4 w-4" />Lihat</Link></Button></td>
+                                                <td className="px-4 py-3 text-right"><Button variant="ghost" size="sm" asChild><Link href={`/pengadaan/${item.id}`}><Eye className="mr-1 h-4 w-4" />Detail</Link></Button></td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -114,4 +128,4 @@ export default function AsmenDashboard({ stats, pengadaans, bidang }: Props) {
     );
 }
 
-AsmenDashboard.layout = () => ({ breadcrumbs: [{ title: 'Dashboard Asmen', href: '/asmen/dashboard' }] });
+ManagerDashboard.layout = () => ({ breadcrumbs: [{ title: 'Dashboard Manager', href: '/manager/dashboard' }] });

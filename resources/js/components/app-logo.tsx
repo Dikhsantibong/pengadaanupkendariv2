@@ -8,7 +8,6 @@ export default function AppLogo() {
                     className="h-8 w-auto object-contain"
                 />
             </div>
-            
         </>
     );
 }

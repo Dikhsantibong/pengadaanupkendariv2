@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, LayoutGrid, Shield } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
+
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 
@@ -22,40 +22,26 @@ export function AppSidebar() {
     const dashboardUrl = '/dashboard';
 
     const userRole = (page.props.auth as any)?.user?.role;
+    const isAsmen = userRole?.startsWith('asmen_');
 
-    const mainNavItems: NavItem[] = userRole === 'asmen' 
-        ? [
-            {
-                title: 'Dashboard Asmen',
-                href: '/asmen/dashboard',
-                icon: LayoutGrid,
-            }
-        ] 
-        : [
-            {
-                title: 'Dashboard',
-                href: dashboardUrl,
-                icon: LayoutGrid,
-            },
-            {
-                title: 'List Pengadaan',
-                href: '/pengadaan',
-                icon: BookOpen,
-            }
+    let mainNavItems: NavItem[];
+
+    if (userRole === 'manager') {
+        mainNavItems = [
+            { title: 'Dashboard Manager', href: '/manager/dashboard', icon: Shield },
+            { title: 'List Pengadaan', href: '/pengadaan', icon: BookOpen },
         ];
-
-    const footerNavItems: NavItem[] = [
-        {
-            title: 'Repository',
-            href: 'https://github.com/laravel/react-starter-kit',
-            icon: FolderGit2,
-        },
-        {
-            title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#react',
-            icon: BookOpen,
-        },
-    ];
+    } else if (isAsmen) {
+        mainNavItems = [
+            { title: 'Dashboard Asmen', href: '/asmen/dashboard', icon: LayoutGrid },
+            { title: 'List Pengadaan', href: '/pengadaan', icon: BookOpen },
+        ];
+    } else {
+        mainNavItems = [
+            { title: 'Dashboard', href: dashboardUrl, icon: LayoutGrid },
+            { title: 'List Pengadaan', href: '/pengadaan', icon: BookOpen },
+        ];
+    }
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -69,7 +55,6 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-
             </SidebarHeader>
 
             <SidebarContent>
@@ -77,7 +62,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
