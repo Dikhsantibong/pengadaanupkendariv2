@@ -155,6 +155,11 @@ class PengadaanController extends Controller
                 ->count(),
             'siap' => Pengadaan::where('status', 'pelaksanaan')->count()
                 + Pengadaan::where('status', 'selesai')->count(),
+            'total_nilai' => Pengadaan::where('status', 'perencanaan')->sum('jaminan_bank_nilai'),
+            'near_deadline' => Pengadaan::where('status', 'perencanaan')
+                ->whereNotNull('tanggal_selesai')
+                ->where('tanggal_selesai', '<=', now()->addDays(7))
+                ->count(),
         ];
 
         $pengadaanAktif = Pengadaan::where('status', 'perencanaan')
@@ -167,9 +172,31 @@ class PengadaanController extends Controller
             ->take(5)
             ->get();
 
+        $recentActivities = PengadaanChecklist::with(['pengadaan', 'checkedByUser'])
+            ->where('fase', 'perencanaan')
+            ->where('is_checked', true)
+            ->latest('checked_at')
+            ->take(4)
+            ->get()
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'nama' => $c->nama,
+                'pengadaan_nama' => $c->pengadaan->nama,
+                'user_name' => $c->checkedByUser?->name ?? 'System',
+                'checked_at' => $c->checked_at->diffForHumans(),
+            ]);
+
+        $statusDistribution = [
+            ['name' => 'Draft', 'value' => $stats['draft'], 'color' => '#64748b'],
+            ['name' => 'Proses', 'value' => $stats['proses'], 'color' => '#eab308'],
+            ['name' => 'Siap Kirim', 'value' => $stats['siap'], 'color' => '#10b981'],
+        ];
+
         return Inertia::render('perencana/dashboard', [
             'stats' => $stats,
             'pengadaanAktif' => $pengadaanAktif,
+            'recentActivities' => $recentActivities,
+            'statusDistribution' => $statusDistribution,
         ]);
     }
 
@@ -184,6 +211,11 @@ class PengadaanController extends Controller
                 ->whereDoesntHave('checklists', fn($q) => $q->where('is_checked', true)->where('fase', 'pelaksanaan'))
                 ->count(),
             'selesai' => Pengadaan::where('status', 'selesai')->count(),
+            'total_nilai' => Pengadaan::where('status', 'pelaksanaan')->sum('jaminan_bank_nilai'),
+            'near_deadline' => Pengadaan::where('status', 'pelaksanaan')
+                ->whereNotNull('tanggal_selesai')
+                ->where('tanggal_selesai', '<=', now()->addDays(7))
+                ->count(),
         ];
 
         $pengadaanAktif = Pengadaan::where('status', 'pelaksanaan')
@@ -196,9 +228,31 @@ class PengadaanController extends Controller
             ->take(5)
             ->get();
 
+        $recentActivities = PengadaanChecklist::with(['pengadaan', 'checkedByUser'])
+            ->where('fase', 'pelaksanaan')
+            ->where('is_checked', true)
+            ->latest('checked_at')
+            ->take(4)
+            ->get()
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'nama' => $c->nama,
+                'pengadaan_nama' => $c->pengadaan->nama,
+                'user_name' => $c->checkedByUser?->name ?? 'System',
+                'checked_at' => $c->checked_at->diffForHumans(),
+            ]);
+
+        $statusDistribution = [
+            ['name' => 'Baru', 'value' => $stats['baru'], 'color' => '#3b82f6'],
+            ['name' => 'Proses', 'value' => $stats['proses'], 'color' => '#f97316'],
+            ['name' => 'Selesai', 'value' => $stats['selesai'], 'color' => '#10b981'],
+        ];
+
         return Inertia::render('pelaksana/dashboard', [
             'stats' => $stats,
             'pengadaanAktif' => $pengadaanAktif,
+            'recentActivities' => $recentActivities,
+            'statusDistribution' => $statusDistribution,
         ]);
     }
 
@@ -213,6 +267,11 @@ class PengadaanController extends Controller
             'perencanaan' => (clone $query)->where('status', 'perencanaan')->count(),
             'pelaksanaan' => (clone $query)->where('status', 'pelaksanaan')->count(),
             'selesai' => (clone $query)->where('status', 'selesai')->count(),
+            'total_nilai' => (clone $query)->sum('jaminan_bank_nilai'),
+            'near_deadline' => (clone $query)->where('status', '!=', 'selesai')
+                ->whereNotNull('tanggal_selesai')
+                ->where('tanggal_selesai', '<=', now()->addDays(7))
+                ->count(),
         ];
 
         $pengadaans = (clone $query)->with('creator')
@@ -223,10 +282,32 @@ class PengadaanController extends Controller
             ->latest()
             ->get();
 
+        $recentActivities = PengadaanChecklist::whereIn('pengadaan_id', (clone $query)->pluck('id'))
+            ->with(['pengadaan', 'checkedByUser'])
+            ->where('is_checked', true)
+            ->latest('checked_at')
+            ->take(4)
+            ->get()
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'nama' => $c->nama,
+                'pengadaan_nama' => $c->pengadaan->nama,
+                'user_name' => $c->checkedByUser?->name ?? 'System',
+                'checked_at' => $c->checked_at->diffForHumans(),
+            ]);
+
+        $statusDistribution = [
+            ['name' => 'Perencanaan', 'value' => $stats['perencanaan'], 'color' => '#eab308'],
+            ['name' => 'Pelaksanaan', 'value' => $stats['pelaksanaan'], 'color' => '#f97316'],
+            ['name' => 'Selesai', 'value' => $stats['selesai'], 'color' => '#10b981'],
+        ];
+
         return Inertia::render('asmen/dashboard', [
             'stats' => $stats,
             'pengadaans' => $pengadaans,
             'bidang' => $user->getAsmenLabel(),
+            'recentActivities' => $recentActivities,
+            'statusDistribution' => $statusDistribution,
         ]);
     }
 
@@ -237,6 +318,11 @@ class PengadaanController extends Controller
             'perencanaan' => Pengadaan::where('status', 'perencanaan')->count(),
             'pelaksanaan' => Pengadaan::where('status', 'pelaksanaan')->count(),
             'selesai' => Pengadaan::where('status', 'selesai')->count(),
+            'total_nilai' => Pengadaan::sum('jaminan_bank_nilai'),
+            'near_deadline' => Pengadaan::where('status', '!=', 'selesai')
+                ->whereNotNull('tanggal_selesai')
+                ->where('tanggal_selesai', '<=', now()->addDays(7))
+                ->count(),
         ];
 
         $pengadaans = Pengadaan::with(['creator', 'direksiUsers'])
@@ -258,10 +344,32 @@ class PengadaanController extends Controller
                 'assigned_count' => $u->pengadaan_direksi_count,
             ]);
 
+        $recentActivities = PengadaanChecklist::with(['pengadaan', 'checkedByUser'])
+            ->where('is_checked', true)
+            ->latest('checked_at')
+            ->take(5)
+            ->get()
+            ->map(fn($c) => [
+                'id' => $c->id,
+                'nama' => $c->nama,
+                'pengadaan_nama' => $c->pengadaan->nama,
+                'pengadaan_id' => $c->pengadaan_id,
+                'user_name' => $c->checkedByUser?->name ?? 'System',
+                'checked_at' => $c->checked_at->diffForHumans(),
+            ]);
+
+        $statusDistribution = [
+            ['name' => 'Perencanaan', 'value' => $stats['perencanaan'], 'color' => '#EAB308'],
+            ['name' => 'Pelaksanaan', 'value' => $stats['pelaksanaan'], 'color' => '#F97316'],
+            ['name' => 'Selesai', 'value' => $stats['selesai'], 'color' => '#10B981'],
+        ];
+
         return Inertia::render('manager/dashboard', [
             'stats' => $stats,
             'pengadaans' => $pengadaans,
             'asmenSummary' => $asmenSummary,
+            'recentActivities' => $recentActivities,
+            'statusDistribution' => $statusDistribution,
         ]);
     }
 
