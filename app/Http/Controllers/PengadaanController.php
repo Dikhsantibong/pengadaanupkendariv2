@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Pengadaan;
 use App\Models\PengadaanChecklist;
+use App\Models\PowerPlant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class PengadaanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pengadaan::with('creator')->withCount([
+        $query = Pengadaan::with(['creator', 'tujuanUnit'])->withCount([
             'checklists',
             'checklists as checked_count' => fn($q) => $q->where('is_checked', true),
         ]);
@@ -35,19 +37,26 @@ class PengadaanController extends Controller
         return Inertia::render('pengadaan/index', [
             'pengadaans' => $pengadaans,
             'filters' => $request->only(['search', 'status']),
+            'powerPlants' => PowerPlant::all(['id', 'name']),
         ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'required|string|max:255',
+            'hpe_nilai' => 'nullable|numeric|min:0',
+            'tujuan_unit_id' => 'nullable|exists:power_plants,id',
+            'sumber_anggaran' => 'nullable|in:AO,AI',
+            'nomor_prk' => 'nullable|string|max:255',
+            'nomor_nota_dinas_manager' => 'nullable|string|max:255',
+            'metode_pengadaan' => 'nullable|in:surat_pesanan,spk,tender',
             'direksi_ids' => 'nullable|array',
             'direksi_ids.*' => 'exists:users,id',
         ]);
 
         $pengadaan = Pengadaan::createWithChecklists(
-            $request->nama,
+            $validated,
             $request->user()->id
         );
 
@@ -61,30 +70,57 @@ class PengadaanController extends Controller
 
     public function show(Pengadaan $pengadaan)
     {
-        $pengadaan->load(['creator', 'checklists.checkedByUser', 'direksiUsers']);
+        $pengadaan->load(['creator', 'checklists.checkedByUser', 'direksiUsers', 'tujuanUnit']);
 
         $asmenUsers = User::where('role', 'like', 'asmen_%')->get(['id', 'name', 'role']);
+        $powerPlants = PowerPlant::all(['id', 'name']);
 
         return Inertia::render('pengadaan/show', [
             'pengadaan' => $pengadaan,
             'asmenUsers' => $asmenUsers,
+            'powerPlants' => $powerPlants,
         ]);
     }
 
     public function update(Request $request, Pengadaan $pengadaan)
     {
         $validated = $request->validate([
+            'hpe_nilai' => 'nullable|numeric|min:0',
+            'tujuan_unit_id' => 'nullable|exists:power_plants,id',
+            'sumber_anggaran' => 'nullable|in:AO,AI',
+            'nomor_prk' => 'nullable|string|max:255',
+            'nomor_nota_dinas_manager' => 'nullable|string|max:255',
+            'metode_pengadaan' => 'nullable|in:surat_pesanan,spk,tender',
+            'hps_nilai' => 'nullable|numeric|min:0',
+            'nomor_kontrak' => 'nullable|string|max:255',
+            'vendor_pelaksana' => 'nullable|string|max:255',
+            'jenis_kontrak' => 'nullable|in:lump_sum,khs',
+            'tahap_bayar' => 'nullable|string|max:255',
+            'nilai_terkontrak' => 'nullable|numeric|min:0',
             'tanggal_mulai' => 'nullable|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
             'amandemen_keterangan' => 'nullable|string',
             'amandemen_tanggal' => 'nullable|date',
+            'amandemen_tanggal_mulai' => 'nullable|date',
             'jaminan_bank_nama' => 'nullable|string|max:255',
             'jaminan_bank_nomor' => 'nullable|string|max:255',
             'jaminan_bank_nilai' => 'nullable|numeric|min:0',
-            'jaminan_bank_berlaku_sampai' => 'nullable|date',
+            'jaminan_bank_berlaku_mulai' => 'nullable|date',
+            'jaminan_bank_berlaku_sampai' => 'nullable|date|after_or_equal:jaminan_bank_berlaku_mulai',
             'pemeliharaan_durasi_hari' => 'nullable|integer|min:1',
             'pemeliharaan_keterangan' => 'nullable|string',
         ]);
+
+        // Validate amandemen must be created 14 days before contract ends
+        if (!empty($validated['amandemen_tanggal']) && $pengadaan->tanggal_selesai) {
+            $amandemenDate = Carbon::parse($validated['amandemen_tanggal']);
+            $contractEnd = $pengadaan->tanggal_selesai->copy();
+            $minAmandemenDate = $contractEnd->copy()->subDays(14);
+
+            if ($amandemenDate->gt($contractEnd)) {
+                return back()->with('error', 'Tanggal amandemen tidak boleh melebihi tanggal selesai kontrak.');
+            }
+        }
 
         // Auto-calculate pemeliharaan dates if durasi provided
         if (isset($validated['pemeliharaan_durasi_hari']) && $pengadaan->tanggal_selesai) {
@@ -155,7 +191,7 @@ class PengadaanController extends Controller
                 ->count(),
             'siap' => Pengadaan::where('status', 'pelaksanaan')->count()
                 + Pengadaan::where('status', 'selesai')->count(),
-            'total_nilai' => Pengadaan::where('status', 'perencanaan')->sum('jaminan_bank_nilai'),
+            'total_nilai' => Pengadaan::where('status', 'perencanaan')->sum('hpe_nilai'),
             'near_deadline' => Pengadaan::where('status', 'perencanaan')
                 ->whereNotNull('tanggal_selesai')
                 ->where('tanggal_selesai', '<=', now()->addDays(7))
@@ -211,7 +247,12 @@ class PengadaanController extends Controller
                 ->whereDoesntHave('checklists', fn($q) => $q->where('is_checked', true)->where('fase', 'pelaksanaan'))
                 ->count(),
             'selesai' => Pengadaan::where('status', 'selesai')->count(),
-            'total_nilai' => Pengadaan::where('status', 'pelaksanaan')->sum('jaminan_bank_nilai'),
+            'total_nilai' => Pengadaan::where('status', 'pelaksanaan')->sum('hps_nilai'),
+            'total_saving' => Pengadaan::where('status', 'pelaksanaan')
+                ->whereNotNull('hpe_nilai')
+                ->whereNotNull('nilai_terkontrak')
+                ->selectRaw('SUM(COALESCE(hpe_nilai, 0) - COALESCE(nilai_terkontrak, 0)) as total')
+                ->value('total') ?? 0,
             'near_deadline' => Pengadaan::where('status', 'pelaksanaan')
                 ->whereNotNull('tanggal_selesai')
                 ->where('tanggal_selesai', '<=', now()->addDays(7))
@@ -267,7 +308,12 @@ class PengadaanController extends Controller
             'perencanaan' => (clone $query)->where('status', 'perencanaan')->count(),
             'pelaksanaan' => (clone $query)->where('status', 'pelaksanaan')->count(),
             'selesai' => (clone $query)->where('status', 'selesai')->count(),
-            'total_nilai' => (clone $query)->sum('jaminan_bank_nilai'),
+            'total_nilai' => (clone $query)->sum('hps_nilai'),
+            'total_saving' => (clone $query)
+                ->whereNotNull('hpe_nilai')
+                ->whereNotNull('nilai_terkontrak')
+                ->selectRaw('SUM(COALESCE(hpe_nilai, 0) - COALESCE(nilai_terkontrak, 0)) as total')
+                ->value('total') ?? 0,
             'near_deadline' => (clone $query)->where('status', '!=', 'selesai')
                 ->whereNotNull('tanggal_selesai')
                 ->where('tanggal_selesai', '<=', now()->addDays(7))
@@ -318,14 +364,18 @@ class PengadaanController extends Controller
             'perencanaan' => Pengadaan::where('status', 'perencanaan')->count(),
             'pelaksanaan' => Pengadaan::where('status', 'pelaksanaan')->count(),
             'selesai' => Pengadaan::where('status', 'selesai')->count(),
-            'total_nilai' => Pengadaan::sum('jaminan_bank_nilai'),
+            'total_nilai' => Pengadaan::sum('hps_nilai'),
+            'total_saving' => Pengadaan::whereNotNull('hpe_nilai')
+                ->whereNotNull('nilai_terkontrak')
+                ->selectRaw('SUM(COALESCE(hpe_nilai, 0) - COALESCE(nilai_terkontrak, 0)) as total')
+                ->value('total') ?? 0,
             'near_deadline' => Pengadaan::where('status', '!=', 'selesai')
                 ->whereNotNull('tanggal_selesai')
                 ->where('tanggal_selesai', '<=', now()->addDays(7))
                 ->count(),
         ];
 
-        $pengadaans = Pengadaan::with(['creator', 'direksiUsers'])
+        $pengadaans = Pengadaan::with(['creator', 'direksiUsers', 'tujuanUnit'])
             ->withCount([
                 'checklists',
                 'checklists as checked_count' => fn($q) => $q->where('is_checked', true),

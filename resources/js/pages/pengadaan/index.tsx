@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Plus, Search, Eye } from 'lucide-react';
 import { useState } from 'react';
 
+type PowerPlant = { id: number; name: string };
+
 type Pengadaan = {
     id: number;
     nama: string;
@@ -17,11 +19,14 @@ type Pengadaan = {
     creator?: { name: string };
     checklists_count: number;
     checked_count: number;
+    tujuan_unit?: { name: string } | null;
+    metode_pengadaan?: string | null;
 };
 
 type Props = {
     pengadaans: Pengadaan[];
     filters: { search?: string; status?: string };
+    powerPlants: PowerPlant[];
 };
 
 const statusColors: Record<string, string> = {
@@ -36,14 +41,28 @@ const statusLabels: Record<string, string> = {
     selesai: 'Selesai',
 };
 
-export default function PengadaanIndex({ pengadaans, filters }: Props) {
+const metodeLabels: Record<string, string> = {
+    surat_pesanan: 'Surat Pesanan',
+    spk: 'SPK',
+    tender: 'Tender',
+};
+
+export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Props) {
     const page = usePage();
     const userRole = (page.props.auth as any)?.user?.role;
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [isOpen, setIsOpen] = useState(false);
 
-    const form = useForm({ nama: '' });
+    const form = useForm({
+        nama: '',
+        hpe_nilai: '',
+        tujuan_unit_id: '',
+        sumber_anggaran: '',
+        nomor_prk: '',
+        nomor_nota_dinas_manager: '',
+        metode_pengadaan: '',
+    });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,6 +72,10 @@ export default function PengadaanIndex({ pengadaans, filters }: Props) {
                 form.reset();
             },
         });
+    };
+
+    const handleMetodeChange = (value: string) => {
+        form.setData('metode_pengadaan', value);
     };
 
     const handleSearch = () => {
@@ -98,6 +121,82 @@ export default function PengadaanIndex({ pengadaans, filters }: Props) {
                                                 required
                                             />
                                             {form.errors.nama && <p className="text-sm text-red-500">{form.errors.nama}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="metode_pengadaan">Metode Pengadaan</Label>
+                                            <select
+                                                id="metode_pengadaan"
+                                                value={form.data.metode_pengadaan}
+                                                onChange={(e) => handleMetodeChange(e.target.value)}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                                required
+                                            >
+                                                <option value="">Pilih Metode</option>
+                                                <option value="surat_pesanan">Surat Pesanan</option>
+                                                <option value="spk">SPK</option>
+                                                <option value="tender">Tender</option>
+                                            </select>
+                                            {form.errors.metode_pengadaan && <p className="text-sm text-red-500">{form.errors.metode_pengadaan}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="tujuan_unit_id">Tujuan Unit</Label>
+                                            <select
+                                                id="tujuan_unit_id"
+                                                value={form.data.tujuan_unit_id}
+                                                onChange={(e) => form.setData('tujuan_unit_id', e.target.value)}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">Pilih Unit</option>
+                                                {powerPlants.map((pp) => (
+                                                    <option key={pp.id} value={pp.id}>{pp.name}</option>
+                                                ))}
+                                            </select>
+                                            {form.errors.tujuan_unit_id && <p className="text-sm text-red-500">{form.errors.tujuan_unit_id}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="sumber_anggaran">Sumber Anggaran</Label>
+                                            <select
+                                                id="sumber_anggaran"
+                                                value={form.data.sumber_anggaran}
+                                                onChange={(e) => form.setData('sumber_anggaran', e.target.value)}
+                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="">Pilih Sumber</option>
+                                                <option value="AO">AO</option>
+                                                <option value="AI">AI</option>
+                                            </select>
+                                            {form.errors.sumber_anggaran && <p className="text-sm text-red-500">{form.errors.sumber_anggaran}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="nomor_prk">Nomor PRK (Nota Dinas Usulan)</Label>
+                                            <Input
+                                                id="nomor_prk"
+                                                value={form.data.nomor_prk}
+                                                onChange={(e) => form.setData('nomor_prk', e.target.value)}
+                                                placeholder="Nomor PRK..."
+                                            />
+                                            {form.errors.nomor_prk && <p className="text-sm text-red-500">{form.errors.nomor_prk}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="nomor_nota_dinas_manager">Nomor Nota Dinas Manager ke Pengadaan (Evaluasi Dokumen)</Label>
+                                            <Input
+                                                id="nomor_nota_dinas_manager"
+                                                value={form.data.nomor_nota_dinas_manager}
+                                                onChange={(e) => form.setData('nomor_nota_dinas_manager', e.target.value)}
+                                                placeholder="Nomor nota dinas..."
+                                            />
+                                            {form.errors.nomor_nota_dinas_manager && <p className="text-sm text-red-500">{form.errors.nomor_nota_dinas_manager}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="hpe_nilai">Nilai HPE (Anggaran)</Label>
+                                            <Input
+                                                id="hpe_nilai"
+                                                type="number"
+                                                value={form.data.hpe_nilai}
+                                                onChange={(e) => form.setData('hpe_nilai', e.target.value)}
+                                                placeholder="0"
+                                            />
+                                            {form.errors.hpe_nilai && <p className="text-sm text-red-500">{form.errors.hpe_nilai}</p>}
                                         </div>
                                     </div>
                                     <DialogFooter>
@@ -157,6 +256,8 @@ export default function PengadaanIndex({ pengadaans, filters }: Props) {
                                         <tr className="border-b text-left text-muted-foreground">
                                             <th className="px-4 py-3 font-medium">No</th>
                                             <th className="px-4 py-3 font-medium">Nama Pengadaan</th>
+                                            <th className="px-4 py-3 font-medium">Metode</th>
+                                            <th className="px-4 py-3 font-medium">Unit</th>
                                             <th className="px-4 py-3 font-medium">Status</th>
                                             <th className="px-4 py-3 font-medium">Progress</th>
                                             <th className="px-4 py-3 font-medium">Dibuat oleh</th>
@@ -169,6 +270,8 @@ export default function PengadaanIndex({ pengadaans, filters }: Props) {
                                             <tr key={item.id} className="border-b hover:bg-muted/50 transition-colors">
                                                 <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
                                                 <td className="px-4 py-3 font-medium">{item.nama}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">{item.metode_pengadaan ? metodeLabels[item.metode_pengadaan] : '-'}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">{item.tujuan_unit?.name || '-'}</td>
                                                 <td className="px-4 py-3">
                                                     <Badge className={statusColors[item.status]}>
                                                         {statusLabels[item.status]}

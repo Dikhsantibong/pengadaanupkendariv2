@@ -12,18 +12,25 @@ class Pengadaan extends Model
 {
     protected $fillable = [
         'nama', 'status', 'progress', 'created_by',
+        'hpe_nilai', 'tujuan_unit_id', 'sumber_anggaran', 'nomor_prk', 'nomor_nota_dinas_manager', 'metode_pengadaan',
+        'hps_nilai', 'nomor_kontrak', 'vendor_pelaksana', 'jenis_kontrak', 'tahap_bayar', 'nilai_terkontrak',
         'tanggal_mulai', 'tanggal_selesai',
-        'amandemen_keterangan', 'amandemen_tanggal',
-        'jaminan_bank_nama', 'jaminan_bank_nomor', 'jaminan_bank_nilai', 'jaminan_bank_berlaku_sampai',
+        'amandemen_keterangan', 'amandemen_tanggal', 'amandemen_tanggal_mulai',
+        'jaminan_bank_nama', 'jaminan_bank_nomor', 'jaminan_bank_nilai', 'jaminan_bank_berlaku_sampai', 'jaminan_bank_berlaku_mulai',
         'pemeliharaan_durasi_hari', 'pemeliharaan_mulai', 'pemeliharaan_selesai', 'pemeliharaan_keterangan',
     ];
 
     protected $casts = [
+        'hpe_nilai' => 'decimal:2',
+        'hps_nilai' => 'decimal:2',
+        'nilai_terkontrak' => 'decimal:2',
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
         'amandemen_tanggal' => 'date',
+        'amandemen_tanggal_mulai' => 'date',
         'jaminan_bank_nilai' => 'decimal:2',
         'jaminan_bank_berlaku_sampai' => 'date',
+        'jaminan_bank_berlaku_mulai' => 'date',
         'pemeliharaan_durasi_hari' => 'integer',
         'pemeliharaan_mulai' => 'date',
         'pemeliharaan_selesai' => 'date',
@@ -32,6 +39,11 @@ class Pengadaan extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function tujuanUnit(): BelongsTo
+    {
+        return $this->belongsTo(PowerPlant::class, 'tujuan_unit_id');
     }
 
     public function checklists(): HasMany
@@ -103,13 +115,19 @@ class Pengadaan extends Model
      * Create default checklists when a new pengadaan is created.
      * Masa Pemeliharaan is the LAST item in pelaksanaan fase.
      */
-    public static function createWithChecklists(string $nama, int $userId): self
+    public static function createWithChecklists(array $data, int $userId): self
     {
         $pengadaan = self::create([
-            'nama' => $nama,
+            'nama' => $data['nama'],
             'status' => 'perencanaan',
             'progress' => 0,
             'created_by' => $userId,
+            'hpe_nilai' => $data['hpe_nilai'] ?? null,
+            'tujuan_unit_id' => $data['tujuan_unit_id'] ?? null,
+            'sumber_anggaran' => $data['sumber_anggaran'] ?? null,
+            'nomor_prk' => $data['nomor_prk'] ?? null,
+            'nomor_nota_dinas_manager' => $data['nomor_nota_dinas_manager'] ?? null,
+            'metode_pengadaan' => $data['metode_pengadaan'] ?? null,
         ]);
 
         $perencanaanItems = [

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Clock, FileText, Lock, TrendingUp, Wrench, Users, Calendar, Landmark, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Lock, TrendingUp, Wrench, Users, Calendar, Landmark, AlertTriangle, Wallet, Building2, Receipt } from 'lucide-react';
 import { useState } from 'react';
 
 type ChecklistItem = {
@@ -20,6 +20,8 @@ type ChecklistItem = {
 
 type AsmenUser = { id: number; name: string; role: string };
 
+type PowerPlant = { id: number; name: string };
+
 type PengadaanData = {
     id: number;
     nama: string;
@@ -29,13 +31,28 @@ type PengadaanData = {
     creator?: { name: string };
     checklists: ChecklistItem[];
     direksi_users: AsmenUser[];
+    hpe_nilai: string | null;
+    hps_nilai: string | null;
+    nilai_terkontrak: string | null;
+    tujuan_unit_id: number | null;
+    tujuan_unit?: { name: string } | null;
+    sumber_anggaran: string | null;
+    nomor_prk: string | null;
+    nomor_nota_dinas_manager: string | null;
+    metode_pengadaan: string | null;
+    nomor_kontrak: string | null;
+    vendor_pelaksana: string | null;
+    jenis_kontrak: string | null;
+    tahap_bayar: string | null;
     tanggal_mulai: string | null;
     tanggal_selesai: string | null;
     amandemen_keterangan: string | null;
     amandemen_tanggal: string | null;
+    amandemen_tanggal_mulai: string | null;
     jaminan_bank_nama: string | null;
     jaminan_bank_nomor: string | null;
     jaminan_bank_nilai: string | null;
+    jaminan_bank_berlaku_mulai: string | null;
     jaminan_bank_berlaku_sampai: string | null;
     pemeliharaan_durasi_hari: number | null;
     pemeliharaan_mulai: string | null;
@@ -43,7 +60,7 @@ type PengadaanData = {
     pemeliharaan_keterangan: string | null;
 };
 
-type Props = { pengadaan: PengadaanData; asmenUsers: AsmenUser[] };
+type Props = { pengadaan: PengadaanData; asmenUsers: AsmenUser[]; powerPlants: PowerPlant[] };
 
 const statusColors: Record<string, string> = {
     perencanaan: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
@@ -57,6 +74,15 @@ const asmenRoleLabels: Record<string, string> = {
     asmen_pemeliharaan: 'Pemeliharaan', asmen_operasi: 'Operasi', asmen_engineering: 'Engineering',
     asmen_business_support: 'Business Support', asmen_k3: 'K3', asmen_lingkungan: 'Lingkungan',
 };
+
+const metodeLabels: Record<string, string> = { surat_pesanan: 'Surat Pesanan', spk: 'SPK', tender: 'Tender' };
+const jenisKontrakLabels: Record<string, string> = { lump_sum: 'Lump Sum', khs: 'KHS' };
+
+function formatRupiah(value: string | number | null): string {
+    if (!value) return '-';
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+}
 
 function DireksiSection({ pengadaan, asmenUsers, userRole }: { pengadaan: PengadaanData; asmenUsers: AsmenUser[]; userRole: string }) {
     const [selected, setSelected] = useState<number[]>(pengadaan.direksi_users.map(u => u.id));
@@ -96,16 +122,86 @@ function DireksiSection({ pengadaan, asmenUsers, userRole }: { pengadaan: Pengad
     );
 }
 
+function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaan: PengadaanData; powerPlants: PowerPlant[]; userRole: string }) {
+    const canEdit = userRole === 'perencana' || userRole === 'manager';
+    const form = useForm({
+        hpe_nilai: pengadaan.hpe_nilai || '',
+        tujuan_unit_id: pengadaan.tujuan_unit_id?.toString() || '',
+        sumber_anggaran: pengadaan.sumber_anggaran || '',
+        nomor_prk: pengadaan.nomor_prk || '',
+        nomor_nota_dinas_manager: pengadaan.nomor_nota_dinas_manager || '',
+        metode_pengadaan: pengadaan.metode_pengadaan || '',
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        form.put(`/pengadaan/${pengadaan.id}`, { preserveScroll: true });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-600" />Data Perencanaan</CardTitle></CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div><Label>Metode Pengadaan</Label>
+                            <select value={form.data.metode_pengadaan} onChange={e => form.setData('metode_pengadaan', e.target.value)} disabled={!canEdit}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                                <option value="">Pilih</option>
+                                <option value="surat_pesanan">Surat Pesanan</option>
+                                <option value="spk">SPK</option>
+                                <option value="tender">Tender</option>
+                            </select>
+                        </div>
+                        <div><Label>Tujuan Unit</Label>
+                            <select value={form.data.tujuan_unit_id} onChange={e => form.setData('tujuan_unit_id', e.target.value)} disabled={!canEdit}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                                <option value="">Pilih Unit</option>
+                                {powerPlants.map(pp => <option key={pp.id} value={pp.id}>{pp.name}</option>)}
+                            </select>
+                        </div>
+                        <div><Label>Sumber Anggaran</Label>
+                            <select value={form.data.sumber_anggaran} onChange={e => form.setData('sumber_anggaran', e.target.value)} disabled={!canEdit}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                                <option value="">Pilih</option>
+                                <option value="AO">AO</option>
+                                <option value="AI">AI</option>
+                            </select>
+                        </div>
+                        <div><Label>Nomor PRK (Nota Dinas Usulan)</Label><Input value={form.data.nomor_prk} onChange={e => form.setData('nomor_prk', e.target.value)} disabled={!canEdit} placeholder="Nomor PRK..." /></div>
+                        <div className="sm:col-span-2"><Label>Nomor Nota Dinas Manager ke Pengadaan (Evaluasi Dokumen)</Label><Input value={form.data.nomor_nota_dinas_manager} onChange={e => form.setData('nomor_nota_dinas_manager', e.target.value)} disabled={!canEdit} placeholder="Nomor nota dinas..." /></div>
+                        <div><Label>Nilai HPE (Anggaran)</Label><Input type="number" value={form.data.hpe_nilai} onChange={e => form.setData('hpe_nilai', e.target.value)} disabled={!canEdit} placeholder="0" /></div>
+                        {pengadaan.hpe_nilai && <div className="flex items-end"><span className="text-sm font-medium text-emerald-700">{formatRupiah(pengadaan.hpe_nilai)}</span></div>}
+                    </div>
+                </CardContent>
+            </Card>
+            {canEdit && (
+                <Button type="submit" disabled={form.processing} className="w-full bg-sky-600 hover:bg-sky-700 text-white">
+                    {form.processing ? 'Menyimpan...' : 'Simpan Data Perencanaan'}
+                </Button>
+            )}
+        </form>
+    );
+}
+
 function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanData; userRole: string }) {
     const canEdit = userRole === 'pelaksana' || userRole === 'manager';
     const form = useForm({
+        hps_nilai: pengadaan.hps_nilai || '',
+        nomor_kontrak: pengadaan.nomor_kontrak || '',
+        vendor_pelaksana: pengadaan.vendor_pelaksana || '',
+        jenis_kontrak: pengadaan.jenis_kontrak || '',
+        tahap_bayar: pengadaan.tahap_bayar || '',
+        nilai_terkontrak: pengadaan.nilai_terkontrak || '',
         tanggal_mulai: pengadaan.tanggal_mulai || '',
         tanggal_selesai: pengadaan.tanggal_selesai || '',
         amandemen_keterangan: pengadaan.amandemen_keterangan || '',
         amandemen_tanggal: pengadaan.amandemen_tanggal || '',
+        amandemen_tanggal_mulai: pengadaan.amandemen_tanggal_mulai || '',
         jaminan_bank_nama: pengadaan.jaminan_bank_nama || '',
         jaminan_bank_nomor: pengadaan.jaminan_bank_nomor || '',
         jaminan_bank_nilai: pengadaan.jaminan_bank_nilai || '',
+        jaminan_bank_berlaku_mulai: pengadaan.jaminan_bank_berlaku_mulai || '',
         jaminan_bank_berlaku_sampai: pengadaan.jaminan_bank_berlaku_sampai || '',
         pemeliharaan_durasi_hari: pengadaan.pemeliharaan_durasi_hari?.toString() || '',
         pemeliharaan_keterangan: pengadaan.pemeliharaan_keterangan || '',
@@ -119,6 +215,10 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
     const deadlineWarning = pengadaan.tanggal_selesai && new Date(pengadaan.tanggal_selesai) > new Date() &&
         Math.ceil((new Date(pengadaan.tanggal_selesai).getTime() - Date.now()) / 86400000) <= 7;
 
+    const amandemen14DayWarning = pengadaan.tanggal_selesai &&
+        Math.ceil((new Date(pengadaan.tanggal_selesai).getTime() - Date.now()) / 86400000) <= 14 &&
+        Math.ceil((new Date(pengadaan.tanggal_selesai).getTime() - Date.now()) / 86400000) > 0;
+
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {deadlineWarning && (
@@ -131,6 +231,30 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
                 </div>
             )}
 
+            {/* Kontrak & Keuangan */}
+            <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-emerald-600" />Kontrak & Keuangan</CardTitle></CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div><Label>Nilai HPS</Label><Input type="number" value={form.data.hps_nilai} onChange={e => form.setData('hps_nilai', e.target.value)} disabled={!canEdit} placeholder="0" /></div>
+                        {pengadaan.hps_nilai && <div className="flex items-end"><span className="text-sm font-medium text-emerald-700">{formatRupiah(pengadaan.hps_nilai)}</span></div>}
+                        <div><Label>Nomor Kontrak</Label><Input value={form.data.nomor_kontrak} onChange={e => form.setData('nomor_kontrak', e.target.value)} disabled={!canEdit} placeholder="Nomor kontrak..." /></div>
+                        <div><Label>Vendor Pelaksana Pekerjaan</Label><Input value={form.data.vendor_pelaksana} onChange={e => form.setData('vendor_pelaksana', e.target.value)} disabled={!canEdit} placeholder="Nama vendor..." /></div>
+                        <div><Label>Jenis Kontrak</Label>
+                            <select value={form.data.jenis_kontrak} onChange={e => form.setData('jenis_kontrak', e.target.value)} disabled={!canEdit}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                                <option value="">Pilih</option>
+                                <option value="lump_sum">Lump Sum</option>
+                                <option value="khs">KHS</option>
+                            </select>
+                        </div>
+                        <div><Label>Tahap Bayar</Label><Input value={form.data.tahap_bayar} onChange={e => form.setData('tahap_bayar', e.target.value)} disabled={!canEdit} placeholder="Tahap bayar..." /></div>
+                        <div><Label>Nilai Terkontrak</Label><Input type="number" value={form.data.nilai_terkontrak} onChange={e => form.setData('nilai_terkontrak', e.target.value)} disabled={!canEdit} placeholder="0" /></div>
+                        {pengadaan.nilai_terkontrak && <div className="flex items-end"><span className="text-sm font-medium text-emerald-700">{formatRupiah(pengadaan.nilai_terkontrak)}</span></div>}
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Jaminan Bank */}
             <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2"><Landmark className="h-5 w-5 text-purple-600" />Jaminan Bank <span className="text-xs font-normal text-muted-foreground">(Opsional)</span></CardTitle></CardHeader>
@@ -139,6 +263,7 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
                         <div><Label>Nama Bank</Label><Input value={form.data.jaminan_bank_nama} onChange={e => form.setData('jaminan_bank_nama', e.target.value)} disabled={!canEdit} placeholder="Nama bank penerbit" /></div>
                         <div><Label>Nomor Jaminan</Label><Input value={form.data.jaminan_bank_nomor} onChange={e => form.setData('jaminan_bank_nomor', e.target.value)} disabled={!canEdit} placeholder="Nomor surat jaminan" /></div>
                         <div><Label>Nilai Jaminan (Rp)</Label><Input type="number" value={form.data.jaminan_bank_nilai} onChange={e => form.setData('jaminan_bank_nilai', e.target.value)} disabled={!canEdit} placeholder="0" /></div>
+                        <div><Label>Berlaku Mulai</Label><Input type="date" value={form.data.jaminan_bank_berlaku_mulai} onChange={e => form.setData('jaminan_bank_berlaku_mulai', e.target.value)} disabled={!canEdit} /></div>
                         <div><Label>Berlaku Sampai</Label><Input type="date" value={form.data.jaminan_bank_berlaku_sampai} onChange={e => form.setData('jaminan_bank_berlaku_sampai', e.target.value)} disabled={!canEdit} /></div>
                     </div>
                 </CardContent>
@@ -157,16 +282,26 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
 
             {/* Amandemen */}
             <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-amber-600" />Amandemen <span className="text-xs font-normal text-muted-foreground">(Opsional)</span></CardTitle></CardHeader>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-amber-600" />Amandemen <span className="text-xs font-normal text-muted-foreground">(Opsional)</span></CardTitle>
+                    <CardDescription>Amandemen harus dibuat maksimal 14 hari sebelum kontrak berakhir</CardDescription>
+                </CardHeader>
                 <CardContent>
+                    {amandemen14DayWarning && (
+                        <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-900/20">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            <p className="text-sm text-amber-700 dark:text-amber-300">Kontrak akan berakhir dalam {Math.ceil((new Date(pengadaan.tanggal_selesai!).getTime() - Date.now()) / 86400000)} hari. Segera buat amandemen jika diperlukan.</p>
+                        </div>
+                    )}
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="sm:col-span-2"><Label>Keterangan Amandemen</Label><Textarea value={form.data.amandemen_keterangan} onChange={e => form.setData('amandemen_keterangan', e.target.value)} disabled={!canEdit} placeholder="Keterangan amandemen..." rows={3} /></div>
-                        <div><Label>Tanggal Amandemen</Label><Input type="date" value={form.data.amandemen_tanggal} onChange={e => form.setData('amandemen_tanggal', e.target.value)} disabled={!canEdit} /></div>
+                        <div><Label>Tanggal Awal Amandemen</Label><Input type="date" value={form.data.amandemen_tanggal_mulai} onChange={e => form.setData('amandemen_tanggal_mulai', e.target.value)} disabled={!canEdit} /></div>
+                        <div><Label>Tanggal Akhir Amandemen</Label><Input type="date" value={form.data.amandemen_tanggal} onChange={e => form.setData('amandemen_tanggal', e.target.value)} disabled={!canEdit} /></div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Pemeliharaan — bagian akhir pelaksanaan */}
+            {/* Pemeliharaan */}
             <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5 text-teal-600" />Pemeliharaan <span className="text-xs font-normal text-muted-foreground">(Opsional — input dalam HARI)</span></CardTitle></CardHeader>
                 <CardContent>
@@ -193,7 +328,7 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
     );
 }
 
-export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
+export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Props) {
     const page = usePage();
     const userRole = (page.props.auth as any)?.user?.role;
 
@@ -212,6 +347,10 @@ export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
 
     const StatusIcon = statusIcons[pengadaan.status];
 
+    const nilaiSaving = pengadaan.hpe_nilai && pengadaan.nilai_terkontrak
+        ? parseFloat(pengadaan.hpe_nilai) - parseFloat(pengadaan.nilai_terkontrak)
+        : null;
+
     return (
         <>
             <Head title={`Detail — ${pengadaan.nama}`} />
@@ -224,6 +363,12 @@ export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
                             Dibuat oleh <span className="font-medium">{pengadaan.creator?.name}</span> pada{' '}
                             {new Date(pengadaan.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
+                            {pengadaan.metode_pengadaan && <span><span className="font-medium">Metode:</span> {metodeLabels[pengadaan.metode_pengadaan]}</span>}
+                            {pengadaan.tujuan_unit && <span><span className="font-medium">Unit:</span> {pengadaan.tujuan_unit.name}</span>}
+                            {pengadaan.sumber_anggaran && <span><span className="font-medium">Sumber:</span> {pengadaan.sumber_anggaran}</span>}
+                            {pengadaan.nomor_prk && <span><span className="font-medium">PRK:</span> {pengadaan.nomor_prk}</span>}
+                        </div>
                         {pengadaan.direksi_users.length > 0 && (
                             <p className="text-sm text-muted-foreground mt-1">
                                 <span className="font-medium">Direksi:</span> {pengadaan.direksi_users.map(u => u.name).join(', ')}
@@ -232,6 +377,25 @@ export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
                     </div>
                     <Badge className={`${statusColors[pengadaan.status]} px-3 py-1 text-sm`}><StatusIcon className="mr-1.5 h-4 w-4" />{statusLabels[pengadaan.status]}</Badge>
                 </div>
+
+                {/* Nilai Saving Card */}
+                {nilaiSaving !== null && (
+                    <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/20">
+                        <CardContent className="pt-6">
+                            <div className="flex items-center gap-3">
+                                <Wallet className="h-6 w-6 text-emerald-600" />
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Nilai Saving (HPE - Kontrak)</p>
+                                    <p className="text-2xl font-bold text-emerald-700">{formatRupiah(nilaiSaving)}</p>
+                                </div>
+                                <div className="ml-auto text-right text-sm text-muted-foreground">
+                                    <p>HPE: {formatRupiah(pengadaan.hpe_nilai)}</p>
+                                    <p>Kontrak: {formatRupiah(pengadaan.nilai_terkontrak)}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Progress */}
                 <Card>
@@ -252,6 +416,9 @@ export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
 
                 {/* Direksi */}
                 <DireksiSection pengadaan={pengadaan} asmenUsers={asmenUsers} userRole={userRole} />
+
+                {/* Data Perencanaan (always visible) */}
+                <PerencanaanDataSection pengadaan={pengadaan} powerPlants={powerPlants} userRole={userRole} />
 
                 {/* Checklists — 2 columns */}
                 <div className="grid gap-6 md:grid-cols-2">
@@ -281,7 +448,7 @@ export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
                         </CardContent>
                     </Card>
 
-                    {/* Pelaksanaan (includes Masa Pemeliharaan as last item) */}
+                    {/* Pelaksanaan */}
                     <Card className={pengadaan.status === 'pelaksanaan' ? 'ring-2 ring-orange-500/30' : ''}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
@@ -314,7 +481,7 @@ export default function PengadaanShow({ pengadaan, asmenUsers }: Props) {
                     </Card>
                 </div>
 
-                {/* Pelaksanaan Data Forms (Jaminan Bank, Rentang Waktu, Amandemen, Pemeliharaan) */}
+                {/* Pelaksanaan Data Forms */}
                 {pengadaan.status !== 'perencanaan' && <PelaksanaanDataSection pengadaan={pengadaan} userRole={userRole} />}
             </div>
         </>

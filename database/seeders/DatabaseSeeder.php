@@ -68,5 +68,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'manager@example.com',
             'role' => 'manager',
         ]);
+
+        $this->call(PowerPlantSeeder::class);
     }
 }

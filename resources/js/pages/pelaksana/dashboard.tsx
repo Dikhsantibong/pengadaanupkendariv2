@@ -23,6 +23,7 @@ type Props = {
         baru: number;
         selesai: number;
         total_nilai: number;
+        total_saving: number;
         near_deadline: number;
     };
     pengadaanAktif: Array<{
@@ -135,6 +136,7 @@ export default function PelaksanaDashboard({ stats, pengadaanAktif, recentActivi
                         </CardHeader>
                         <CardContent className="flex flex-col justify-center py-6">
                             <div className="text-3xl font-extrabold text-emerald-400 mb-2">{formatCurrency(stats.total_nilai)}</div>
+                            <div className="text-sm text-emerald-300 mb-1">Saving: {formatCurrency(stats.total_saving)}</div>
                             <div className="p-3 rounded-lg bg-slate-800 border border-slate-700 mt-4">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs text-slate-400">Near Deadline</span>
