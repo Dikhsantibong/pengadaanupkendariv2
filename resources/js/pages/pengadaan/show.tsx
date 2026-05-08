@@ -303,14 +303,14 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
 
             {/* Pemeliharaan */}
             <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5 text-teal-600" />Pemeliharaan <span className="text-xs font-normal text-muted-foreground">(Opsional — input dalam HARI)</span></CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5 text-teal-600" />Pemeliharaan <span className="text-xs font-normal text-muted-foreground">(Opsional - input dalam HARI)</span></CardTitle></CardHeader>
                 <CardContent>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div><Label>Durasi Pemeliharaan (Hari)</Label><Input type="number" min="1" value={form.data.pemeliharaan_durasi_hari} onChange={e => form.setData('pemeliharaan_durasi_hari', e.target.value)} disabled={!canEdit} placeholder="Contoh: 90" /></div>
                         <div className="flex items-end">
                             {pengadaan.pemeliharaan_mulai && pengadaan.pemeliharaan_selesai && (
                                 <div className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Periode:</span> {new Date(pengadaan.pemeliharaan_mulai).toLocaleDateString('id-ID')} — {new Date(pengadaan.pemeliharaan_selesai).toLocaleDateString('id-ID')}
+                                    <span className="font-medium">Periode:</span> {new Date(pengadaan.pemeliharaan_mulai).toLocaleDateString('id-ID')} - {new Date(pengadaan.pemeliharaan_selesai).toLocaleDateString('id-ID')}
                                 </div>
                             )}
                         </div>
@@ -353,7 +353,7 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
 
     return (
         <>
-            <Head title={`Detail — ${pengadaan.nama}`} />
+            <Head title={`Detail - ${pengadaan.nama}`} />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-y-auto rounded-xl p-4 md:p-8">
                 {/* Header */}
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -420,7 +420,7 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                 {/* Data Perencanaan (always visible) */}
                 <PerencanaanDataSection pengadaan={pengadaan} powerPlants={powerPlants} userRole={userRole} />
 
-                {/* Checklists — 2 columns */}
+                {/* Checklists - 2 columns */}
                 <div className="grid gap-6 md:grid-cols-2">
                     {/* Perencanaan */}
                     <Card className={pengadaan.status === 'perencanaan' ? 'ring-2 ring-sky-500/30' : ''}>

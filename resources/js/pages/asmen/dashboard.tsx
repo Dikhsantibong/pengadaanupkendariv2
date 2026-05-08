@@ -88,7 +88,7 @@ export default function AsmenDashboard({ stats, pengadaans, bidang, recentActivi
                             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Super Dashboard</h1>
                             <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">Asmen</Badge>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{bidang} — Monitoring data pengadaan yang ditugaskan kepada Anda.</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{bidang} - Monitoring data pengadaan yang ditugaskan kepada Anda.</p>
                     </div>
                     <div className="flex items-center gap-2">
                          <Badge variant="outline" className="px-3 py-1 border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">

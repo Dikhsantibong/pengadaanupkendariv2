@@ -92,7 +92,7 @@ export default function ManagerDashboard({ stats, pengadaans, asmenSummary, rece
                             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Super Dashboard</h1>
                             <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">v2.0</Badge>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Pusat Kendali Pengadaan — Monitoring Komprehensif Seluruh Data.</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Pusat Kendali Pengadaan - Monitoring Komprehensif Seluruh Data.</p>
                     </div>
                     <div className="flex items-center gap-2">
                          <Badge variant="outline" className="px-3 py-1 border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300">
