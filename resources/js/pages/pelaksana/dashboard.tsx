@@ -74,16 +74,16 @@ export default function PelaksanaDashboard({ stats, pengadaanAktif, recentActivi
 
                 {/* Top Statistics Grid */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="relative overflow-hidden border-none shadow-md bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2 opacity-90">
-                            <CardTitle className="text-sm font-medium">Fase Pelaksanaan</CardTitle>
-                            <FolderKanban className="h-4 w-4" />
+                    <Card className="relative overflow-hidden border shadow-md bg-white dark:bg-slate-950">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Fase Pelaksanaan</CardTitle>
+                            <FolderKanban className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold">{stats.total}</div>
-                            <p className="text-xs opacity-70 mt-1">Pengadaan dalam pelaksanaan</p>
+                            <div className="text-3xl font-black text-slate-900 dark:text-slate-100">{stats.total}</div>
+                            <p className="text-xs text-muted-foreground mt-1 font-medium">Pengadaan dalam pelaksanaan</p>
                         </CardContent>
-                        <div className="absolute -right-4 -bottom-4 opacity-10"><FolderKanban size={100} /></div>
+                        <div className="absolute -right-4 -bottom-4 opacity-5 text-orange-600"><FolderKanban size={100} /></div>
                     </Card>
 
                     <Card className="border-l-4 border-l-blue-400 shadow-sm">
@@ -129,20 +129,20 @@ export default function PelaksanaDashboard({ stats, pengadaanAktif, recentActivi
                 {/* Middle Section: Financial & Chart & Activities */}
                 <div className="grid gap-6 lg:grid-cols-3">
                      {/* Financial Summary */}
-                     <Card className="lg:col-span-1 border-none shadow-md bg-slate-900 text-white">
+                    <Card className="lg:col-span-1 border shadow-md bg-white dark:bg-slate-950">
                         <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-emerald-400" />Nilai Pelaksanaan</CardTitle>
-                            <CardDescription className="text-slate-400">Total nilai jaminan bank yang dikelola</CardDescription>
+                            <CardTitle className="text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-emerald-600" />Nilai Pelaksanaan</CardTitle>
+                            <CardDescription>Total nilai jaminan bank yang dikelola</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col justify-center py-6">
-                            <div className="text-3xl font-extrabold text-emerald-400 mb-2">{formatCurrency(stats.total_nilai)}</div>
-                            <div className="text-sm text-emerald-300 mb-1">Saving: {formatCurrency(stats.total_saving)}</div>
-                            <div className="p-3 rounded-lg bg-slate-800 border border-slate-700 mt-4">
+                            <div className="text-3xl font-extrabold text-emerald-600 mb-2">{formatCurrency(stats.total_nilai)}</div>
+                            <div className="text-sm text-emerald-500 font-medium mb-1">Saving: {formatCurrency(stats.total_saving)}</div>
+                            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 mt-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs text-slate-400">Near Deadline</span>
+                                    <span className="text-xs text-muted-foreground font-bold">Near Deadline</span>
                                     <Badge variant="destructive" className="h-5 px-1.5">{stats.near_deadline}</Badge>
                                 </div>
-                                <p className="text-[10px] text-slate-500 italic">Pekerjaan dengan tenggat waktu dekat.</p>
+                                <p className="text-[10px] text-muted-foreground italic">Pekerjaan dengan tenggat waktu dekat.</p>
                             </div>
                         </CardContent>
                     </Card>

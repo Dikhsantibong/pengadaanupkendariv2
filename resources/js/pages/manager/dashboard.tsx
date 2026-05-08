@@ -103,18 +103,18 @@ export default function ManagerDashboard({ stats, pengadaans, asmenSummary, rece
 
                 {/* Top Statistics Grid */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="relative overflow-hidden border-none shadow-lg bg-gradient-to-br from-blue-600 to-indigo-700 text-white transform hover:scale-[1.02] transition-all duration-300">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2 opacity-90">
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Total Pengadaan</CardTitle>
-                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                <FolderKanban className="h-4 w-4" />
+                    <Card className="relative overflow-hidden border shadow-md bg-white dark:bg-slate-950 transform hover:scale-[1.02] transition-all duration-300">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Total Pengadaan</CardTitle>
+                            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                                <FolderKanban className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-4xl font-black">{stats.total}</div>
-                            <p className="text-xs opacity-80 mt-2 font-medium">Semua fase pengadaan</p>
+                            <div className="text-4xl font-black text-slate-900 dark:text-slate-100">{stats.total}</div>
+                            <p className="text-xs text-muted-foreground mt-2 font-medium">Semua fase pengadaan</p>
                         </CardContent>
-                        <div className="absolute -right-6 -bottom-6 opacity-10 rotate-12"><FolderKanban size={120} /></div>
+                        <div className="absolute -right-6 -bottom-6 opacity-5 rotate-12 text-blue-600"><FolderKanban size={120} /></div>
                     </Card>
 
                     <Card className="relative overflow-hidden border-none shadow-md bg-amber-50 dark:bg-amber-950/20 border-l-4 border-l-amber-500 transform hover:scale-[1.02] transition-all duration-300">
@@ -166,20 +166,20 @@ export default function ManagerDashboard({ stats, pengadaans, asmenSummary, rece
                 {/* Middle Section: Financial & Alerts & Chart */}
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Financial Summary */}
-                    <Card className="lg:col-span-1 border-none shadow-md bg-slate-900 text-white">
+                    <Card className="lg:col-span-1 border shadow-md bg-white dark:bg-slate-950">
                         <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-emerald-400" />Ringkasan Keuangan</CardTitle>
-                            <CardDescription className="text-slate-400">Total nilai jaminan bank terdaftar</CardDescription>
+                            <CardTitle className="text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-emerald-600" />Ringkasan Keuangan</CardTitle>
+                            <CardDescription>Total nilai jaminan bank terdaftar</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col justify-center py-6">
-                            <div className="text-3xl font-extrabold text-emerald-400 mb-2">{formatCurrency(stats.total_nilai)}</div>
-                            <div className="text-sm text-emerald-300 mb-1">Saving: {formatCurrency(stats.total_saving)}</div>
-                            <div className="p-3 rounded-lg bg-slate-800 border border-slate-700 mt-4">
+                            <div className="text-3xl font-extrabold text-emerald-600 mb-2">{formatCurrency(stats.total_nilai)}</div>
+                            <div className="text-sm text-emerald-500 font-medium mb-1">Saving: {formatCurrency(stats.total_saving)}</div>
+                            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 mt-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs text-slate-400">Near Deadline</span>
+                                    <span className="text-xs text-muted-foreground font-bold">Near Deadline</span>
                                     <Badge variant="destructive" className="h-5 px-1.5">{stats.near_deadline}</Badge>
                                 </div>
-                                <p className="text-[10px] text-slate-500 italic">Pengadaan yang berakhir dalam 7 hari kedepan.</p>
+                                <p className="text-[10px] text-muted-foreground italic">Pengadaan yang berakhir dalam 7 hari kedepan.</p>
                             </div>
                         </CardContent>
                     </Card>
