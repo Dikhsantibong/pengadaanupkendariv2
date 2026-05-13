@@ -7,6 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle2, Clock, FileText, Lock, TrendingUp, Wrench, Users, Calendar, Landmark, AlertTriangle, Wallet, Building2, Receipt } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { useState } from 'react';
 
 type ChecklistItem = {
@@ -145,28 +152,51 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
                 <CardContent>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div><Label>Metode Pengadaan</Label>
-                            <select value={form.data.metode_pengadaan} onChange={e => form.setData('metode_pengadaan', e.target.value)} disabled={!canEdit}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="">Pilih</option>
-                                <option value="surat_pesanan">Surat Pesanan</option>
-                                <option value="spk">SPK</option>
-                                <option value="tender">Tender</option>
-                            </select>
+                            <Select
+                                value={form.data.metode_pengadaan}
+                                onValueChange={(value) => form.setData('metode_pengadaan', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih Metode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="surat_pesanan">Surat Pesanan</SelectItem>
+                                    <SelectItem value="spk">SPK</SelectItem>
+                                    <SelectItem value="tender">Tender</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div><Label>Tujuan Unit</Label>
-                            <select value={form.data.tujuan_unit_id} onChange={e => form.setData('tujuan_unit_id', e.target.value)} disabled={!canEdit}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="">Pilih Unit</option>
-                                {powerPlants.map(pp => <option key={pp.id} value={pp.id}>{pp.name}</option>)}
-                            </select>
+                            <Select
+                                value={form.data.tujuan_unit_id}
+                                onValueChange={(value) => form.setData('tujuan_unit_id', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih Unit" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {powerPlants.map(pp => (
+                                        <SelectItem key={pp.id} value={pp.id.toString()}>{pp.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div><Label>Sumber Anggaran</Label>
-                            <select value={form.data.sumber_anggaran} onChange={e => form.setData('sumber_anggaran', e.target.value)} disabled={!canEdit}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="">Pilih</option>
-                                <option value="AO">AO</option>
-                                <option value="AI">AI</option>
-                            </select>
+                            <Select
+                                value={form.data.sumber_anggaran}
+                                onValueChange={(value) => form.setData('sumber_anggaran', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih Sumber" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="AO">AO</SelectItem>
+                                    <SelectItem value="AI">AI</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div><Label>Nomor PRK (Nota Dinas Usulan)</Label><Input value={form.data.nomor_prk} onChange={e => form.setData('nomor_prk', e.target.value)} disabled={!canEdit} placeholder="Nomor PRK..." /></div>
                         <div className="sm:col-span-2"><Label>Nomor Nota Dinas Manager ke Pengadaan (Evaluasi Dokumen)</Label><Input value={form.data.nomor_nota_dinas_manager} onChange={e => form.setData('nomor_nota_dinas_manager', e.target.value)} disabled={!canEdit} placeholder="Nomor nota dinas..." /></div>
@@ -241,12 +271,19 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
                         <div><Label>Nomor Kontrak</Label><Input value={form.data.nomor_kontrak} onChange={e => form.setData('nomor_kontrak', e.target.value)} disabled={!canEdit} placeholder="Nomor kontrak..." /></div>
                         <div><Label>Vendor Pelaksana Pekerjaan</Label><Input value={form.data.vendor_pelaksana} onChange={e => form.setData('vendor_pelaksana', e.target.value)} disabled={!canEdit} placeholder="Nama vendor..." /></div>
                         <div><Label>Jenis Kontrak</Label>
-                            <select value={form.data.jenis_kontrak} onChange={e => form.setData('jenis_kontrak', e.target.value)} disabled={!canEdit}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="">Pilih</option>
-                                <option value="lump_sum">Lump Sum</option>
-                                <option value="khs">KHS</option>
-                            </select>
+                            <Select
+                                value={form.data.jenis_kontrak}
+                                onValueChange={(value) => form.setData('jenis_kontrak', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih Jenis" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="lump_sum">Lump Sum</SelectItem>
+                                    <SelectItem value="khs">KHS</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div><Label>Tahap Bayar</Label><Input value={form.data.tahap_bayar} onChange={e => form.setData('tahap_bayar', e.target.value)} disabled={!canEdit} placeholder="Tahap bayar..." /></div>
                         <div><Label>Nilai Terkontrak</Label><Input type="number" value={form.data.nilai_terkontrak} onChange={e => form.setData('nilai_terkontrak', e.target.value)} disabled={!canEdit} placeholder="0" /></div>

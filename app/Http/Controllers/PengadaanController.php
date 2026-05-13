@@ -32,11 +32,15 @@ class PengadaanController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('metode')) {
+            $query->where('metode_pengadaan', $request->metode);
+        }
+
         $pengadaans = $query->latest()->get();
 
         return Inertia::render('pengadaan/index', [
             'pengadaans' => $pengadaans,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'metode']),
             'powerPlants' => PowerPlant::all(['id', 'name']),
         ]);
     }

@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Plus, Search, Eye } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,7 +32,7 @@ type Pengadaan = {
 
 type Props = {
     pengadaans: Pengadaan[];
-    filters: { search?: string; status?: string };
+    filters: { search?: string; status?: string; metode?: string };
     powerPlants: PowerPlant[];
 };
 
@@ -52,6 +59,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
     const userRole = (page.props.auth as any)?.user?.role;
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
+    const [metodeFilter, setMetodeFilter] = useState(filters.metode || '');
     const [isOpen, setIsOpen] = useState(false);
 
     const form = useForm({
@@ -74,17 +82,20 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
         });
     };
 
-    const handleMetodeChange = (value: string) => {
-        form.setData('metode_pengadaan', value);
-    };
+
 
     const handleSearch = () => {
-        router.get('/pengadaan', { search: searchQuery, status: statusFilter }, { preserveState: true });
+        router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode: metodeFilter }, { preserveState: true });
     };
 
     const handleFilterStatus = (status: string) => {
         setStatusFilter(status);
-        router.get('/pengadaan', { search: searchQuery, status }, { preserveState: true });
+        router.get('/pengadaan', { search: searchQuery, status, metode: metodeFilter }, { preserveState: true });
+    };
+
+    const handleFilterMetode = (metode: string) => {
+        setMetodeFilter(metode);
+        router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode }, { preserveState: true });
     };
 
     return (
@@ -124,47 +135,53 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="metode_pengadaan">Metode Pengadaan</Label>
-                                            <select
-                                                id="metode_pengadaan"
+                                            <Select
                                                 value={form.data.metode_pengadaan}
-                                                onChange={(e) => handleMetodeChange(e.target.value)}
-                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                                onValueChange={(value) => form.setData('metode_pengadaan', value)}
                                                 required
                                             >
-                                                <option value="">Pilih Metode</option>
-                                                <option value="surat_pesanan">Surat Pesanan</option>
-                                                <option value="spk">SPK</option>
-                                                <option value="tender">Tender</option>
-                                            </select>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Pilih Metode" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="surat_pesanan">Surat Pesanan</SelectItem>
+                                                    <SelectItem value="spk">SPK</SelectItem>
+                                                    <SelectItem value="tender">Tender</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                             {form.errors.metode_pengadaan && <p className="text-sm text-red-500">{form.errors.metode_pengadaan}</p>}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="tujuan_unit_id">Tujuan Unit</Label>
-                                            <select
-                                                id="tujuan_unit_id"
+                                            <Select
                                                 value={form.data.tujuan_unit_id}
-                                                onChange={(e) => form.setData('tujuan_unit_id', e.target.value)}
-                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                                onValueChange={(value) => form.setData('tujuan_unit_id', value)}
                                             >
-                                                <option value="">Pilih Unit</option>
-                                                {powerPlants.map((pp) => (
-                                                    <option key={pp.id} value={pp.id}>{pp.name}</option>
-                                                ))}
-                                            </select>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Pilih Unit" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {powerPlants.map((pp) => (
+                                                        <SelectItem key={pp.id} value={pp.id.toString()}>{pp.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                             {form.errors.tujuan_unit_id && <p className="text-sm text-red-500">{form.errors.tujuan_unit_id}</p>}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="sumber_anggaran">Sumber Anggaran</Label>
-                                            <select
-                                                id="sumber_anggaran"
+                                            <Select
                                                 value={form.data.sumber_anggaran}
-                                                onChange={(e) => form.setData('sumber_anggaran', e.target.value)}
-                                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                                onValueChange={(value) => form.setData('sumber_anggaran', value)}
                                             >
-                                                <option value="">Pilih Sumber</option>
-                                                <option value="AO">AO</option>
-                                                <option value="AI">AI</option>
-                                            </select>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Pilih Sumber" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="AO">AO</SelectItem>
+                                                    <SelectItem value="AI">AI</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                             {form.errors.sumber_anggaran && <p className="text-sm text-red-500">{form.errors.sumber_anggaran}</p>}
                                         </div>
                                         <div className="grid gap-2">
@@ -228,11 +245,31 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                <Button variant={statusFilter === '' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('')}>Semua</Button>
-                                <Button variant={statusFilter === 'perencanaan' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('perencanaan')}>Perencanaan</Button>
-                                <Button variant={statusFilter === 'pelaksanaan' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('pelaksanaan')}>Pelaksanaan</Button>
-                                <Button variant={statusFilter === 'selesai' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('selesai')}>Selesai</Button>
+                            <div className="w-full md:w-56">
+                                <Label htmlFor="metode_filter" className="mb-2 block text-sm">Metode Pengadaan</Label>
+                                <Select
+                                    value={metodeFilter}
+                                    onValueChange={(value) => handleFilterMetode(value === "all" ? "" : value)}
+                                >
+                                    <SelectTrigger id="metode_filter" className="w-full">
+                                        <SelectValue placeholder="Semua Metode" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Semua Metode</SelectItem>
+                                        <SelectItem value="surat_pesanan">Surat Pesanan</SelectItem>
+                                        <SelectItem value="spk">SPK</SelectItem>
+                                        <SelectItem value="tender">Tender</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <Label className="mb-2 block text-sm opacity-0 hidden md:block">Status</Label>
+                                <div className="flex gap-2">
+                                    <Button variant={statusFilter === '' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('')}>Semua</Button>
+                                    <Button variant={statusFilter === 'perencanaan' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('perencanaan')}>Perencanaan</Button>
+                                    <Button variant={statusFilter === 'pelaksanaan' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('pelaksanaan')}>Pelaksanaan</Button>
+                                    <Button variant={statusFilter === 'selesai' ? 'default' : 'outline'} size="sm" onClick={() => handleFilterStatus('selesai')}>Selesai</Button>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
