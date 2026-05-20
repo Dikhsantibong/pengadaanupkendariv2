@@ -47,6 +47,10 @@ class PengadaanController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->user()->role === 'manager') {
+            return back()->with('error', 'Manager tidak memiliki akses untuk menambah data.');
+        }
+
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'hpe_nilai' => 'nullable|numeric|min:0',
@@ -88,6 +92,10 @@ class PengadaanController extends Controller
 
     public function update(Request $request, Pengadaan $pengadaan)
     {
+        if ($request->user()->role === 'manager') {
+            return back()->with('error', 'Manager tidak memiliki akses untuk mengubah data.');
+        }
+
         $validated = $request->validate([
             'hpe_nilai' => 'nullable|numeric|min:0',
             'tujuan_unit_id' => 'nullable|exists:power_plants,id',
@@ -138,8 +146,26 @@ class PengadaanController extends Controller
         return back()->with('success', 'Data berhasil diperbarui.');
     }
 
+    public function destroy(Request $request, Pengadaan $pengadaan)
+    {
+        $user = $request->user();
+
+        if (!in_array($user->role, ['perencana', 'pelaksana'])) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk menghapus data pengadaan.');
+        }
+
+        $pengadaan->delete();
+
+        return redirect()->route('pengadaan.index')
+            ->with('success', 'Pengadaan berhasil dihapus.');
+    }
+
     public function assignDireksi(Request $request, Pengadaan $pengadaan)
     {
+        if ($request->user()->role === 'manager') {
+            return back()->with('error', 'Manager tidak memiliki akses untuk menunjuk direksi.');
+        }
+
         $request->validate([
             'direksi_ids' => 'required|array',
             'direksi_ids.*' => 'exists:users,id',
@@ -154,13 +180,11 @@ class PengadaanController extends Controller
     {
         $user = $request->user();
 
-        if ($user->isAsmen()) {
+        if ($user->isAsmen() || $user->isManager()) {
             return back()->with('error', 'Anda tidak memiliki akses untuk mengubah checklist.');
         }
 
-        if ($user->isManager()) {
-            // Manager can toggle anything
-        } elseif ($user->role === 'perencana') {
+        if ($user->role === 'perencana') {
             if ($checklist->fase !== 'perencanaan') {
                 return back()->with('error', 'Perencana hanya dapat mengubah checklist perencanaan.');
             }

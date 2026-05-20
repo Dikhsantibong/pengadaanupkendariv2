@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('pengadaan', [PengadaanController::class, 'store'])->name('pengadaan.store');
     Route::get('pengadaan/{pengadaan}', [PengadaanController::class, 'show'])->name('pengadaan.show');
     Route::put('pengadaan/{pengadaan}', [PengadaanController::class, 'update'])->name('pengadaan.update');
+    Route::delete('pengadaan/{pengadaan}', [PengadaanController::class, 'destroy'])->name('pengadaan.destroy');
 
     // Checklist toggle
     Route::post('pengadaan/{pengadaan}/checklist/{checklist}/toggle', [PengadaanController::class, 'toggleChecklist'])->name('pengadaan.checklist.toggle');

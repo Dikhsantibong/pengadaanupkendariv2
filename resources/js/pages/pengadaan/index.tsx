@@ -12,7 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Eye } from 'lucide-react';
+import { Plus, Search, Eye, Trash } from 'lucide-react';
 import { useState } from 'react';
 
 type PowerPlant = { id: number; name: string };
@@ -86,6 +86,12 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
 
     const handleSearch = () => {
         router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode: metodeFilter }, { preserveState: true });
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm('Apakah Anda yakin ingin menghapus pengadaan ini?')) {
+            router.delete(`/pengadaan/${id}`);
+        }
     };
 
     const handleFilterStatus = (status: string) => {
@@ -332,12 +338,17 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                                 <td className="px-4 py-3 text-muted-foreground">
                                                     {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </td>
-                                                <td className="px-4 py-3 text-right">
+                                                <td className="px-4 py-3 text-right flex justify-end gap-2">
                                                     <Button variant="ghost" size="sm" asChild>
                                                         <Link href={`/pengadaan/${item.id}`}>
                                                             <Eye className="mr-1 h-4 w-4" /> Detail
                                                         </Link>
                                                     </Button>
+                                                    {(userRole === 'perencana' || userRole === 'pelaksana') && (
+                                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50">
+                                                            <Trash className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

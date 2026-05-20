@@ -100,7 +100,7 @@ function DireksiSection({ pengadaan, asmenUsers, userRole }: { pengadaan: Pengad
         setSaving(true);
         router.post(`/pengadaan/${pengadaan.id}/direksi`, { direksi_ids: selected }, { preserveScroll: true, onFinish: () => setSaving(false) });
     };
-    const canEdit = userRole === 'perencana' || userRole === 'manager';
+    const canEdit = userRole === 'perencana';
 
     return (
         <Card>
@@ -131,7 +131,7 @@ function DireksiSection({ pengadaan, asmenUsers, userRole }: { pengadaan: Pengad
 }
 
 function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaan: PengadaanData; powerPlants: PowerPlant[]; userRole: string }) {
-    const canEdit = userRole === 'perencana' || userRole === 'manager';
+    const canEdit = userRole === 'perencana';
     const form = useForm({
         hpe_nilai: pengadaan.hpe_nilai || '',
         tujuan_unit_id: pengadaan.tujuan_unit_id?.toString() || '',
@@ -216,7 +216,7 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
 }
 
 function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanData; userRole: string }) {
-    const canEdit = userRole === 'pelaksana' || userRole === 'manager';
+    const canEdit = userRole === 'pelaksana';
     const form = useForm({
         hps_nilai: pengadaan.hps_nilai || '',
         nomor_kontrak: pengadaan.nomor_kontrak || '',
@@ -380,8 +380,8 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
         router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, { preserveScroll: true });
     };
 
-    const canTogglePerencanaan = (userRole === 'perencana' && pengadaan.status === 'perencanaan') || userRole === 'manager';
-    const canTogglePelaksanaan = (userRole === 'pelaksana' && pengadaan.status === 'pelaksanaan') || userRole === 'manager';
+    const canTogglePerencanaan = (userRole === 'perencana' && pengadaan.status === 'perencanaan');
+    const canTogglePelaksanaan = (userRole === 'pelaksana' && pengadaan.status === 'pelaksanaan');
 
     const StatusIcon = statusIcons[pengadaan.status];
 
