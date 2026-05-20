@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PengadaanChecklist extends Model
 {
-    protected $fillable = ['pengadaan_id', 'nama', 'fase', 'is_checked', 'checked_at', 'checked_by', 'urutan'];
+    protected $fillable = ['pengadaan_id', 'nama', 'fase', 'is_checked', 'checked_at', 'checked_by', 'urutan', 'is_optional'];
 
     protected $casts = [
         'is_checked' => 'boolean',
+        'is_optional' => 'boolean',
         'checked_at' => 'datetime',
     ];
 

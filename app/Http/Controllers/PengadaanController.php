@@ -15,8 +15,8 @@ class PengadaanController extends Controller
     public function index(Request $request)
     {
         $query = Pengadaan::with(['creator', 'tujuanUnit'])->withCount([
-            'checklists',
-            'checklists as checked_count' => fn($q) => $q->where('is_checked', true),
+            'checklists' => fn($q) => $q->where('is_optional', false),
+            'checklists as checked_count' => fn($q) => $q->where('is_checked', true)->where('is_optional', false),
         ]);
 
         $user = $request->user();
@@ -205,8 +205,8 @@ class PengadaanController extends Controller
         $pengadaanAktif = Pengadaan::where('status', 'perencanaan')
             ->with(['checklistsPerencanaan'])
             ->withCount([
-                'checklistsPerencanaan',
-                'checklistsPerencanaan as perencanaan_checked' => fn($q) => $q->where('is_checked', true),
+                'checklistsPerencanaan' => fn($q) => $q->where('is_optional', false),
+                'checklistsPerencanaan as perencanaan_checked' => fn($q) => $q->where('is_checked', true)->where('is_optional', false),
             ])
             ->latest()
             ->take(5)
@@ -266,8 +266,8 @@ class PengadaanController extends Controller
         $pengadaanAktif = Pengadaan::where('status', 'pelaksanaan')
             ->with(['checklistsPelaksanaan'])
             ->withCount([
-                'checklistsPelaksanaan',
-                'checklistsPelaksanaan as pelaksanaan_checked' => fn($q) => $q->where('is_checked', true),
+                'checklistsPelaksanaan' => fn($q) => $q->where('is_optional', false),
+                'checklistsPelaksanaan as pelaksanaan_checked' => fn($q) => $q->where('is_checked', true)->where('is_optional', false),
             ])
             ->latest()
             ->take(5)
@@ -326,8 +326,8 @@ class PengadaanController extends Controller
 
         $pengadaans = (clone $query)->with('creator')
             ->withCount([
-                'checklists',
-                'checklists as checked_count' => fn($q) => $q->where('is_checked', true),
+                'checklists' => fn($q) => $q->where('is_optional', false),
+                'checklists as checked_count' => fn($q) => $q->where('is_checked', true)->where('is_optional', false),
             ])
             ->latest()
             ->get();
@@ -381,8 +381,8 @@ class PengadaanController extends Controller
 
         $pengadaans = Pengadaan::with(['creator', 'direksiUsers', 'tujuanUnit'])
             ->withCount([
-                'checklists',
-                'checklists as checked_count' => fn($q) => $q->where('is_checked', true),
+                'checklists' => fn($q) => $q->where('is_optional', false),
+                'checklists as checked_count' => fn($q) => $q->where('is_checked', true)->where('is_optional', false),
             ])
             ->latest()
             ->get();

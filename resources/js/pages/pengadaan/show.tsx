@@ -21,6 +21,7 @@ type ChecklistItem = {
     nama: string;
     fase: 'perencanaan' | 'pelaksanaan';
     is_checked: boolean;
+    is_optional: boolean;
     checked_at: string | null;
     checked_by_user?: { name: string } | null;
 };
@@ -477,7 +478,12 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                                 {perencanaanItems.map((item, idx) => (
                                     <div key={item.id} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'}`}>
                                         <Checkbox id={`p-${item.id}`} checked={item.is_checked} disabled={!canTogglePerencanaan} onCheckedChange={() => handleToggle(item.id)} />
-                                        <label htmlFor={`p-${item.id}`} className={`flex-1 text-sm cursor-pointer select-none ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>{idx + 1}. {item.nama}</label>
+                                        <label htmlFor={`p-${item.id}`} className={`flex-1 text-sm cursor-pointer select-none ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>
+                                            {idx + 1}. {item.nama}
+                                            {item.is_optional && (
+                                                <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
+                                            )}
+                                        </label>
                                         {!canTogglePerencanaan && !item.is_checked && pengadaan.status !== 'perencanaan' && <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />}
                                     </div>
                                 ))}
@@ -508,7 +514,12 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                                     {pelaksanaanItems.map((item, idx) => (
                                         <div key={item.id} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'}`}>
                                             <Checkbox id={`e-${item.id}`} checked={item.is_checked} disabled={!canTogglePelaksanaan} onCheckedChange={() => handleToggle(item.id)} />
-                                            <label htmlFor={`e-${item.id}`} className={`flex-1 text-sm cursor-pointer select-none ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>{idx + 1}. {item.nama}</label>
+                                            <label htmlFor={`e-${item.id}`} className={`flex-1 text-sm cursor-pointer select-none ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>
+                                                {idx + 1}. {item.nama}
+                                                {item.is_optional && (
+                                                    <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
+                                                )}
+                                            </label>
                                             {item.is_checked && item.checked_by_user && <span className="text-xs text-muted-foreground">oleh {item.checked_by_user.name}</span>}
                                         </div>
                                     ))}

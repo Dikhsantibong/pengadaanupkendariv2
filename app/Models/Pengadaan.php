@@ -90,15 +90,15 @@ class Pengadaan extends Model
      */
     public function recalculateProgress(): void
     {
-        $totalChecklists = $this->checklists()->count();
-        $checkedCount = $this->checklists()->where('is_checked', true)->count();
+        $totalChecklists = $this->checklists()->where('is_optional', false)->count();
+        $checkedCount = $this->checklists()->where('is_optional', false)->where('is_checked', true)->count();
 
         $this->progress = $totalChecklists > 0 ? round(($checkedCount / $totalChecklists) * 100) : 0;
 
-        $perencanaanTotal = $this->checklistsPerencanaan()->count();
-        $perencanaanChecked = $this->checklistsPerencanaan()->where('is_checked', true)->count();
-        $pelaksanaanTotal = $this->checklistsPelaksanaan()->count();
-        $pelaksanaanChecked = $this->checklistsPelaksanaan()->where('is_checked', true)->count();
+        $perencanaanTotal = $this->checklistsPerencanaan()->where('is_optional', false)->count();
+        $perencanaanChecked = $this->checklistsPerencanaan()->where('is_optional', false)->where('is_checked', true)->count();
+        $pelaksanaanTotal = $this->checklistsPelaksanaan()->where('is_optional', false)->count();
+        $pelaksanaanChecked = $this->checklistsPelaksanaan()->where('is_optional', false)->where('is_checked', true)->count();
 
         if ($perencanaanTotal > 0 && $perencanaanChecked === $perencanaanTotal && $this->status === 'perencanaan') {
             $this->status = 'pelaksanaan';
@@ -165,6 +165,7 @@ class Pengadaan extends Model
                 'nama' => $item,
                 'fase' => 'perencanaan',
                 'urutan' => $urutan++,
+                'is_optional' => $item === 'PR / RO',
             ]);
         }
 
@@ -173,6 +174,7 @@ class Pengadaan extends Model
                 'nama' => $item,
                 'fase' => 'pelaksanaan',
                 'urutan' => $urutan++,
+                'is_optional' => false,
             ]);
         }
 
