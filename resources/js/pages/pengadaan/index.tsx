@@ -74,9 +74,9 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
     const [isOpen, setIsOpen] = useState(false);
 
     const isPaginated = pengadaans && typeof pengadaans === 'object' && 'data' in pengadaans;
-    const items = isPaginated ? pengadaans.data : pengadaans;
-    const meta = isPaginated ? pengadaans.meta : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
-    const links = isPaginated ? pengadaans.links : [];
+    const items = isPaginated ? (pengadaans.data || []) : (pengadaans || []);
+    const meta = isPaginated ? (pengadaans.meta || { current_page: 1, last_page: 1, per_page: 10, total: 0 }) : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
+    const links = isPaginated ? (pengadaans.links || []) : [];
 
     const form = useForm({
         nama: '',
@@ -306,7 +306,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                 {/* Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Daftar Pengadaan ({meta.total})</CardTitle>
+                        <CardTitle>Daftar Pengadaan ({meta?.total ?? items.length})</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {items.length === 0 ? (
@@ -382,27 +382,27 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                 </Card>
 
                 {/* Pagination */}
-                {meta.last_page > 1 && (
+                {(meta?.last_page ?? 1) > 1 && (
                     <Card>
                         <CardContent className="pt-6">
                             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
                                 <div className="text-sm text-muted-foreground">
-                                    Menampilkan {((meta.current_page - 1) * meta.per_page) + 1} sampai {Math.min(meta.current_page * meta.per_page, meta.total)} dari {meta.total} data
+                                    Menampilkan {(((meta?.current_page ?? 1) - 1) * (meta?.per_page ?? 10)) + 1} sampai {Math.min((meta?.current_page ?? 1) * (meta?.per_page ?? 10), meta?.total ?? 0)} dari {meta?.total ?? 0} data
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handlePageChange(links[0]?.url)}
-                                        disabled={!links[0]?.url || meta.current_page === 1}
+                                        disabled={!links[0]?.url || (meta?.current_page ?? 1) === 1}
                                     >
                                         &laquo; Pertama
                                     </Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handlePageChange(links[meta.current_page - 1]?.url)}
-                                        disabled={!links[meta.current_page - 1]?.url}
+                                        onClick={() => handlePageChange(links[(meta?.current_page ?? 1) - 1]?.url)}
+                                        disabled={!links[(meta?.current_page ?? 1) - 1]?.url}
                                     >
                                         &lsaquo; Sebelumnya
                                     </Button>
@@ -423,8 +423,8 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handlePageChange(links[meta.current_page + 1]?.url)}
-                                        disabled={!links[meta.current_page + 1]?.url}
+                                        onClick={() => handlePageChange(links[(meta?.current_page ?? 1) + 1]?.url)}
+                                        disabled={!links[(meta?.current_page ?? 1) + 1]?.url}
                                     >
                                         Selanjutnya &rsaquo;
                                     </Button>
@@ -432,7 +432,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handlePageChange(links[links.length - 1]?.url)}
-                                        disabled={!links[links.length - 1]?.url || meta.current_page === meta.last_page}
+                                        disabled={!links[links.length - 1]?.url || (meta?.current_page ?? 1) === (meta?.last_page ?? 1)}
                                     >
                                         Terakhir &raquo;
                                     </Button>
