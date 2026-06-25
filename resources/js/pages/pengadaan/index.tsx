@@ -30,17 +30,13 @@ type Pengadaan = {
     metode_pengadaan?: string | null;
 };
 
-type PaginationMeta = {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-};
-
 type Props = {
     pengadaans: Pengadaan[] | {
         data: Pengadaan[];
-        meta: PaginationMeta;
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
         links: { url: string | null; label: string; active: boolean }[];
     };
     filters: { search?: string; status?: string; metode?: string };
@@ -75,8 +71,13 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
 
     const isPaginated = pengadaans && typeof pengadaans === 'object' && 'data' in pengadaans;
     const items = isPaginated ? (pengadaans.data || []) : (pengadaans || []);
-    const meta = isPaginated ? (pengadaans.meta || { current_page: 1, last_page: 1, per_page: 10, total: 0 }) : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
-    const links = isPaginated ? (pengadaans.links || []) : [];
+    const meta = isPaginated ? {
+        current_page: (pengadaans as any).current_page || 1,
+        last_page: (pengadaans as any).last_page || 1,
+        per_page: (pengadaans as any).per_page || 10,
+        total: (pengadaans as any).total || 0,
+    } : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
+    const links = isPaginated ? ((pengadaans as any).links || []) : [];
 
     const form = useForm({
         nama: '',
@@ -389,25 +390,13 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                 <div className="text-sm text-muted-foreground">
                                     Menampilkan {(((meta?.current_page ?? 1) - 1) * (meta?.per_page ?? 10)) + 1} sampai {Math.min((meta?.current_page ?? 1) * (meta?.per_page ?? 10), meta?.total ?? 0)} dari {meta?.total ?? 0} data
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(links[0]?.url)}
-                                        disabled={!links[0]?.url || (meta?.current_page ?? 1) === 1}
-                                    >
-                                        &laquo; Pertama
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(links[(meta?.current_page ?? 1) - 1]?.url)}
-                                        disabled={!links[(meta?.current_page ?? 1) - 1]?.url}
-                                    >
-                                        &lsaquo; Sebelumnya
-                                    </Button>
-                                    <div className="flex items-center gap-1">
-                                        {links.slice(1, -1).map((link, idx) => (
+                                <div className="flex flex-wrap items-center gap-1">
+                                    {links.map((link, idx) => {
+                                        let label = link.label;
+                                        if (label.includes('Previous')) label = '&laquo; Sebelumnya';
+                                        if (label.includes('Next')) label = 'Selanjutnya &raquo;';
+                                        
+                                        return (
                                             <Button
                                                 key={idx}
                                                 variant={link.active ? 'default' : 'outline'}
@@ -416,26 +405,10 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                                 disabled={!link.url}
                                                 className="min-w-[40px]"
                                             >
-                                                {link.label.replace(/&[^;]+;/g, '')}
+                                                <span dangerouslySetInnerHTML={{ __html: label }} />
                                             </Button>
-                                        ))}
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(links[(meta?.current_page ?? 1) + 1]?.url)}
-                                        disabled={!links[(meta?.current_page ?? 1) + 1]?.url}
-                                    >
-                                        Selanjutnya &rsaquo;
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(links[links.length - 1]?.url)}
-                                        disabled={!links[links.length - 1]?.url || (meta?.current_page ?? 1) === (meta?.last_page ?? 1)}
-                                    >
-                                        Terakhir &raquo;
-                                    </Button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </CardContent>
