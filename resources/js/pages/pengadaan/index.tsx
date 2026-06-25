@@ -77,7 +77,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
         per_page: (pengadaans as any).per_page || 10,
         total: (pengadaans as any).total || 0,
     } : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
-    const links = isPaginated ? ((pengadaans as any).links || []) : [];
+    const links: { url: string | null; label: string; active: boolean }[] = isPaginated ? ((pengadaans as any).links || []) : [];
 
     const form = useForm({
         nama: '',
@@ -391,7 +391,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                     Menampilkan {(((meta?.current_page ?? 1) - 1) * (meta?.per_page ?? 10)) + 1} sampai {Math.min((meta?.current_page ?? 1) * (meta?.per_page ?? 10), meta?.total ?? 0)} dari {meta?.total ?? 0} data
                                 </div>
                                 <div className="flex flex-wrap items-center gap-1">
-                                    {links.map((link, idx) => {
+                                    {links.map((link: { url: string | null; label: string; active: boolean }, idx: number) => {
                                         let label = link.label;
                                         if (label.includes('Previous')) label = '&laquo; Sebelumnya';
                                         if (label.includes('Next')) label = 'Selanjutnya &raquo;';

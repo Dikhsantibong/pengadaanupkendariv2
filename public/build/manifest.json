@@ -422,7 +422,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-BA39C_Ph.js",
+    "file": "assets/app-C7zmvSEx.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -814,7 +814,7 @@
     ]
   },
   "resources/js/pages/welcome.tsx": {
-    "file": "assets/welcome-Cf-BeeLn.js",
+    "file": "assets/welcome-BIecShJZ.js",
     "name": "welcome",
     "src": "resources/js/pages/welcome.tsx",
     "isDynamicEntry": true,

@@ -1,4 +1,4 @@
-﻿import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { dashboard, login, register } from '@/routes';
 
 export default function Welcome({
@@ -7,7 +7,7 @@ export default function Welcome({
     canRegister?: boolean;
 }) {
     const { auth, currentTeam } = usePage().props;
-    const dashboardUrl = currentTeam ? dashboard(currentTeam.slug) : '/';
+    const dashboardUrl = dashboard();
 
     return (
         <>
