@@ -38,7 +38,7 @@ type PaginationMeta = {
 };
 
 type Props = {
-    pengadaans: {
+    pengadaans: Pengadaan[] | {
         data: Pengadaan[];
         meta: PaginationMeta;
         links: { url: string | null; label: string; active: boolean }[];
@@ -73,9 +73,10 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
     const [metodeFilter, setMetodeFilter] = useState(filters.metode || '');
     const [isOpen, setIsOpen] = useState(false);
 
-    const items = pengadaans.data;
-    const meta = pengadaans.meta;
-    const links = pengadaans.links;
+    const isPaginated = pengadaans && typeof pengadaans === 'object' && 'data' in pengadaans;
+    const items = isPaginated ? pengadaans.data : pengadaans;
+    const meta = isPaginated ? pengadaans.meta : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
+    const links = isPaginated ? pengadaans.links : [];
 
     const form = useForm({
         nama: '',
