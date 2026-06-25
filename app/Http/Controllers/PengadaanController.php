@@ -36,7 +36,7 @@ class PengadaanController extends Controller
             $query->where('metode_pengadaan', $request->metode);
         }
 
-        $pengadaans = $query->latest()->get();
+        $pengadaans = $query->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('pengadaan/index', [
             'pengadaans' => $pengadaans,

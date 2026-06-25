@@ -30,8 +30,19 @@ type Pengadaan = {
     metode_pengadaan?: string | null;
 };
 
+type PaginationMeta = {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+};
+
 type Props = {
-    pengadaans: Pengadaan[];
+    pengadaans: {
+        data: Pengadaan[];
+        meta: PaginationMeta;
+        links: { url: string | null; label: string; active: boolean }[];
+    };
     filters: { search?: string; status?: string; metode?: string };
     powerPlants: PowerPlant[];
 };
@@ -62,6 +73,10 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
     const [metodeFilter, setMetodeFilter] = useState(filters.metode || '');
     const [isOpen, setIsOpen] = useState(false);
 
+    const items = pengadaans.data;
+    const meta = pengadaans.meta;
+    const links = pengadaans.links;
+
     const form = useForm({
         nama: '',
         hpe_nilai: '',
@@ -85,7 +100,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
 
 
     const handleSearch = () => {
-        router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode: metodeFilter }, { preserveState: true });
+        router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode: metodeFilter, page: 1 }, { preserveState: true });
     };
 
     const handleDelete = (id: number) => {
@@ -96,12 +111,18 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
 
     const handleFilterStatus = (status: string) => {
         setStatusFilter(status);
-        router.get('/pengadaan', { search: searchQuery, status, metode: metodeFilter }, { preserveState: true });
+        router.get('/pengadaan', { search: searchQuery, status, metode: metodeFilter, page: 1 }, { preserveState: true });
     };
 
     const handleFilterMetode = (metode: string) => {
         setMetodeFilter(metode);
-        router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode }, { preserveState: true });
+        router.get('/pengadaan', { search: searchQuery, status: statusFilter, metode, page: 1 }, { preserveState: true });
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(url, {}, { preserveState: true });
+        }
     };
 
     return (
@@ -284,10 +305,10 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                 {/* Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Daftar Pengadaan ({pengadaans.length})</CardTitle>
+                        <CardTitle>Daftar Pengadaan ({meta.total})</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {pengadaans.length === 0 ? (
+                        {items.length === 0 ? (
                             <div className="text-center py-12 text-muted-foreground">
                                 <p className="text-lg font-medium">Belum ada data pengadaan</p>
                                 <p className="text-sm mt-1">Klik "Buat Pengadaan" untuk memulai.</p>
@@ -309,9 +330,9 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {pengadaans.map((item, idx) => (
+                                        {items.map((item, idx) => (
                                             <tr key={item.id} className="border-b hover:bg-muted/50 transition-colors">
-                                                <td className="px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">{(meta.current_page - 1) * meta.per_page + idx + 1}</td>
                                                 <td className="px-4 py-3 font-medium">{item.nama}</td>
                                                 <td className="px-4 py-3 text-muted-foreground">{item.metode_pengadaan ? metodeLabels[item.metode_pengadaan] : '-'}</td>
                                                 <td className="px-4 py-3 text-muted-foreground">{item.tujuan_unit?.name || '-'}</td>
@@ -358,6 +379,67 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Pagination */}
+                {meta.last_page > 1 && (
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+                                <div className="text-sm text-muted-foreground">
+                                    Menampilkan {((meta.current_page - 1) * meta.per_page) + 1} sampai {Math.min(meta.current_page * meta.per_page, meta.total)} dari {meta.total} data
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(links[0]?.url)}
+                                        disabled={!links[0]?.url || meta.current_page === 1}
+                                    >
+                                        &laquo; Pertama
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(links[meta.current_page - 1]?.url)}
+                                        disabled={!links[meta.current_page - 1]?.url}
+                                    >
+                                        &lsaquo; Sebelumnya
+                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        {links.slice(1, -1).map((link, idx) => (
+                                            <Button
+                                                key={idx}
+                                                variant={link.active ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => handlePageChange(link.url)}
+                                                disabled={!link.url}
+                                                className="min-w-[40px]"
+                                            >
+                                                {link.label.replace(/&[^;]+;/g, '')}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(links[meta.current_page + 1]?.url)}
+                                        disabled={!links[meta.current_page + 1]?.url}
+                                    >
+                                        Selanjutnya &rsaquo;
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(links[links.length - 1]?.url)}
+                                        disabled={!links[links.length - 1]?.url || meta.current_page === meta.last_page}
+                                    >
+                                        Terakhir &raquo;
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </>
     );
