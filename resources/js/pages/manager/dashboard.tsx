@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     Activity,
     AlertTriangle,
@@ -56,7 +56,15 @@ type Props = {
         total_saving: number;
         near_deadline: number;
     };
-    pengadaans: Pengadaan[];
+    pengadaans: Pengadaan[] | {
+        data: Pengadaan[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        links: { url: string | null; label: string; active: boolean }[];
+    };
+    filters?: { search?: string };
     asmenSummary: AsmenSummary[];
     recentActivities: RecentActivity[];
     statusDistribution: StatusDist[];
@@ -77,9 +85,28 @@ const formatCurrency = (value: number) => {
     }).format(value);
 };
 
-export default function ManagerDashboard({ stats, pengadaans, asmenSummary, recentActivities, statusDistribution }: Props) {
-    const [searchQuery, setSearchQuery] = useState('');
-    const filtered = pengadaans.filter(p => p.nama.toLowerCase().includes(searchQuery.toLowerCase()));
+export default function ManagerDashboard({ stats, pengadaans, filters, asmenSummary, recentActivities, statusDistribution }: Props) {
+    const [searchQuery, setSearchQuery] = useState(filters?.search || '');
+    
+    const isPaginated = pengadaans && typeof pengadaans === 'object' && 'data' in pengadaans;
+    const items = isPaginated ? (pengadaans.data || []) : (pengadaans || []);
+    const meta = isPaginated ? {
+        current_page: (pengadaans as any).current_page || 1,
+        last_page: (pengadaans as any).last_page || 1,
+        per_page: (pengadaans as any).per_page || 10,
+        total: (pengadaans as any).total || 0,
+    } : { current_page: 1, last_page: 1, per_page: items.length, total: items.length };
+    const links: { url: string | null; label: string; active: boolean }[] = isPaginated ? ((pengadaans as any).links || []) : [];
+
+    const handleSearch = () => {
+        router.get('/manager/dashboard', { search: searchQuery, page: 1 }, { preserveState: true });
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(url, { search: searchQuery }, { preserveState: true });
+        }
+    };
 
     return (
         <>
@@ -283,14 +310,15 @@ export default function ManagerDashboard({ stats, pengadaans, asmenSummary, rece
                                 <Input
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    placeholder="Cari nama pengadaan..."
+                                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                                    placeholder="Cari nama pengadaan (Enter)..."
                                     className="pl-9 bg-muted/30"
                                 />
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {filtered.length === 0 ? (
+                        {items.length === 0 ? (
                             <div className="text-center py-16 text-muted-foreground">
                                 <FolderKanban className="mx-auto h-12 w-12 opacity-20 mb-4" />
                                 <p className="text-lg font-medium">Tidak ada data ditemukan</p>
@@ -310,9 +338,9 @@ export default function ManagerDashboard({ stats, pengadaans, asmenSummary, rece
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y">
-                                        {filtered.map((item, idx) => (
+                                        {items.map((item, idx) => (
                                             <tr key={item.id} className="group hover:bg-muted/30 transition-colors">
-                                                <td className="px-4 py-4 text-muted-foreground font-medium">{idx + 1}</td>
+                                                <td className="px-4 py-4 text-muted-foreground font-medium">{(meta.current_page - 1) * meta.per_page + idx + 1}</td>
                                                 <td className="px-4 py-4">
                                                     <div className="font-bold text-slate-900 dark:text-slate-100">{item.nama}</div>
                                                     <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
@@ -370,6 +398,35 @@ export default function ManagerDashboard({ stats, pengadaans, asmenSummary, rece
                             </div>
                         )}
                     </CardContent>
+                    
+                    {/* Pagination */}
+                    {meta.last_page > 1 && (
+                        <div className="border-t px-6 py-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-between bg-slate-50/50 dark:bg-slate-900/50 rounded-b-xl">
+                            <div className="text-sm text-muted-foreground">
+                                Menampilkan {((meta.current_page - 1) * meta.per_page) + 1} sampai {Math.min(meta.current_page * meta.per_page, meta.total)} dari {meta.total} data
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1">
+                                {links.map((link, idx) => {
+                                    let label = link.label;
+                                    if (label.includes('Previous')) label = '&laquo; Sebelumnya';
+                                    if (label.includes('Next')) label = 'Selanjutnya &raquo;';
+                                    
+                                    return (
+                                        <Button
+                                            key={idx}
+                                            variant={link.active ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => handlePageChange(link.url)}
+                                            disabled={!link.url}
+                                            className="min-w-[40px]"
+                                        >
+                                            <span dangerouslySetInnerHTML={{ __html: label }} />
+                                        </Button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </Card>
             </div>
         </>

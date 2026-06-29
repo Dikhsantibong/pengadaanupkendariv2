@@ -385,7 +385,7 @@ class PengadaanController extends Controller
         ]);
     }
 
-    public function dashboardManager()
+    public function dashboardManager(Request $request)
     {
         $stats = [
             'total' => Pengadaan::count(),
@@ -403,13 +403,17 @@ class PengadaanController extends Controller
                 ->count(),
         ];
 
-        $pengadaans = Pengadaan::with(['creator', 'direksiUsers', 'tujuanUnit'])
+        $query = Pengadaan::with(['creator', 'direksiUsers', 'tujuanUnit'])
             ->withCount([
                 'checklists' => fn($q) => $q->where('is_optional', false),
                 'checklists as checked_count' => fn($q) => $q->where('is_checked', true)->where('is_optional', false),
-            ])
-            ->latest()
-            ->get();
+            ]);
+
+        if ($request->filled('search')) {
+            $query->where('nama', 'like', '%' . $request->search . '%');
+        }
+
+        $pengadaans = $query->latest()->paginate(10)->withQueryString();
 
         $asmenSummary = User::where('role', 'like', 'asmen_%')
             ->withCount('pengadaanDireksi')
@@ -445,6 +449,7 @@ class PengadaanController extends Controller
         return Inertia::render('manager/dashboard', [
             'stats' => $stats,
             'pengadaans' => $pengadaans,
+            'filters' => $request->only(['search']),
             'asmenSummary' => $asmenSummary,
             'recentActivities' => $recentActivities,
             'statusDistribution' => $statusDistribution,
