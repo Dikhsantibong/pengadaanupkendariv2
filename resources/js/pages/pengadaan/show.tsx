@@ -47,6 +47,8 @@ type PengadaanData = {
     tujuan_unit?: { name: string } | null;
     sumber_anggaran: string | null;
     nomor_prk: string | null;
+    nomor_pr: string | null;
+    nomor_po: string | null;
     nomor_nota_dinas_manager: string | null;
     metode_pengadaan: string | null;
     nomor_kontrak: string | null;
@@ -138,9 +140,13 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
         tujuan_unit_id: pengadaan.tujuan_unit_id?.toString() || '',
         sumber_anggaran: pengadaan.sumber_anggaran || '',
         nomor_prk: pengadaan.nomor_prk || '',
+        nomor_pr: pengadaan.nomor_pr || '',
+        nomor_po: pengadaan.nomor_po || '',
         nomor_nota_dinas_manager: pengadaan.nomor_nota_dinas_manager || '',
         metode_pengadaan: pengadaan.metode_pengadaan || '',
     });
+
+    const [tipeNomor, setTipeNomor] = useState<'pr' | 'po'>(pengadaan.nomor_po ? 'po' : 'pr');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -201,6 +207,41 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
                             </Select>
                         </div>
                         <div><Label>Nomor PRK (Nota Dinas Usulan)</Label><Input value={form.data.nomor_prk} onChange={e => form.setData('nomor_prk', e.target.value)} disabled={!canEdit} placeholder="Nomor PRK..." /></div>
+                        <div className="grid gap-2">
+                            <Label>Nomor PR / PO</Label>
+                            <div className="flex gap-2">
+                                <Select value={tipeNomor} onValueChange={(val: 'pr' | 'po') => {
+                                    setTipeNomor(val);
+                                    const currentVal = tipeNomor === 'pr' ? form.data.nomor_pr : form.data.nomor_po;
+                                    form.setData({
+                                        ...form.data,
+                                        nomor_pr: val === 'pr' ? currentVal : '',
+                                        nomor_po: val === 'po' ? currentVal : '',
+                                    });
+                                }} disabled={!canEdit}>
+                                    <SelectTrigger className="w-[120px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="pr">No. PR</SelectItem>
+                                        <SelectItem value="po">No. PO</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Input 
+                                    placeholder={`Masukkan Nomor ${tipeNomor.toUpperCase()}...`}
+                                    value={tipeNomor === 'pr' ? form.data.nomor_pr : form.data.nomor_po}
+                                    onChange={(e) => {
+                                        if (tipeNomor === 'pr') {
+                                            form.setData('nomor_pr', e.target.value);
+                                        } else {
+                                            form.setData('nomor_po', e.target.value);
+                                        }
+                                    }}
+                                    disabled={!canEdit}
+                                    className="flex-1"
+                                />
+                            </div>
+                        </div>
                         <div className="sm:col-span-2"><Label>Nomor Nota Dinas Manager ke Pengadaan (Evaluasi Dokumen)</Label><Input value={form.data.nomor_nota_dinas_manager} onChange={e => form.setData('nomor_nota_dinas_manager', e.target.value)} disabled={!canEdit} placeholder="Nomor nota dinas..." /></div>
                         <div><Label>Nilai HPE (Anggaran)</Label><Input type="number" value={form.data.hpe_nilai} onChange={e => form.setData('hpe_nilai', e.target.value)} disabled={!canEdit} placeholder="0" /></div>
                         {pengadaan.hpe_nilai && <div className="flex items-end"><span className="text-sm font-medium text-emerald-700">{formatRupiah(pengadaan.hpe_nilai)}</span></div>}
@@ -457,6 +498,8 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                             {pengadaan.tujuan_unit && <span><span className="font-medium">Unit:</span> {pengadaan.tujuan_unit.name}</span>}
                             {pengadaan.sumber_anggaran && <span><span className="font-medium">Sumber:</span> {pengadaan.sumber_anggaran}</span>}
                             {pengadaan.nomor_prk && <span><span className="font-medium">PRK:</span> {pengadaan.nomor_prk}</span>}
+                            {pengadaan.nomor_pr && <span><span className="font-medium">PR:</span> {pengadaan.nomor_pr}</span>}
+                            {pengadaan.nomor_po && <span><span className="font-medium">PO:</span> {pengadaan.nomor_po}</span>}
                         </div>
                         {pengadaan.direksi_users.length > 0 && (
                             <p className="text-sm text-muted-foreground mt-1">

@@ -12,7 +12,7 @@ class Pengadaan extends Model
 {
     protected $fillable = [
         'nama', 'status', 'progress', 'created_by',
-        'hpe_nilai', 'tujuan_unit_id', 'sumber_anggaran', 'nomor_prk', 'nomor_nota_dinas_manager', 'metode_pengadaan',
+        'hpe_nilai', 'tujuan_unit_id', 'sumber_anggaran', 'nomor_prk', 'nomor_pr', 'nomor_po', 'nomor_nota_dinas_manager', 'metode_pengadaan',
         'hps_nilai', 'nomor_kontrak', 'vendor_pelaksana', 'jenis_kontrak', 'tahap_bayar', 'nilai_terkontrak',
         'tanggal_mulai', 'tanggal_selesai',
         'amandemen_keterangan', 'amandemen_tanggal', 'amandemen_tanggal_mulai',

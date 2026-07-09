@@ -68,6 +68,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [metodeFilter, setMetodeFilter] = useState(filters.metode || '');
     const [isOpen, setIsOpen] = useState(false);
+    const [tipeNomor, setTipeNomor] = useState<'pr' | 'po'>('pr');
 
     const isPaginated = pengadaans && typeof pengadaans === 'object' && 'data' in pengadaans;
     const items = isPaginated ? (pengadaans.data || []) : (pengadaans || []);
@@ -85,6 +86,8 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
         tujuan_unit_id: '',
         sumber_anggaran: '',
         nomor_prk: '',
+        nomor_pr: '',
+        nomor_po: '',
         nomor_nota_dinas_manager: '',
         metode_pengadaan: '',
     });
@@ -95,6 +98,7 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
             onSuccess: () => {
                 setIsOpen(false);
                 form.reset();
+                setTipeNomor('pr');
             },
         });
     };
@@ -222,6 +226,42 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                                 placeholder="Nomor PRK..."
                                             />
                                             {form.errors.nomor_prk && <p className="text-sm text-red-500">{form.errors.nomor_prk}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Nomor PR / PO</Label>
+                                            <div className="flex gap-2">
+                                                <Select value={tipeNomor} onValueChange={(val: 'pr' | 'po') => {
+                                                    setTipeNomor(val);
+                                                    const currentVal = tipeNomor === 'pr' ? form.data.nomor_pr : form.data.nomor_po;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        nomor_pr: val === 'pr' ? currentVal : '',
+                                                        nomor_po: val === 'po' ? currentVal : '',
+                                                    });
+                                                }}>
+                                                    <SelectTrigger className="w-[120px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="pr">No. PR</SelectItem>
+                                                        <SelectItem value="po">No. PO</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Input 
+                                                    placeholder={`Masukkan Nomor ${tipeNomor.toUpperCase()}...`}
+                                                    value={tipeNomor === 'pr' ? form.data.nomor_pr : form.data.nomor_po}
+                                                    onChange={(e) => {
+                                                        if (tipeNomor === 'pr') {
+                                                            form.setData('nomor_pr', e.target.value);
+                                                        } else {
+                                                            form.setData('nomor_po', e.target.value);
+                                                        }
+                                                    }}
+                                                    className="flex-1"
+                                                />
+                                            </div>
+                                            {form.errors.nomor_pr && <p className="text-sm text-red-500">{form.errors.nomor_pr}</p>}
+                                            {form.errors.nomor_po && <p className="text-sm text-red-500">{form.errors.nomor_po}</p>}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="nomor_nota_dinas_manager">Nomor Nota Dinas Manager ke Pengadaan (Evaluasi Dokumen)</Label>
