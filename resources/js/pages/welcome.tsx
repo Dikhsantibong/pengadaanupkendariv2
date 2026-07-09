@@ -56,25 +56,19 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
             
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-sky-500/30">
                 <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 shadow-sm">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-2">
-                                <div className="bg-sky-600 p-2 rounded-lg">
-                                    <Activity className="h-5 w-5 text-white" />
-                                </div>
-                                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400">
-                                    SIPengadaan
-                                </span>
+                                <img src="/logo/sidebarlogo.png" alt="Logo" className="h-10 w-auto" />
                             </div>
-                            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                                <BarChart3 className="h-4 w-4" />
-                                Portal Informasi Pengadaan Publik
+                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                UP KENDARI
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                <main className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-8">
                     
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Ringkasan Eksekutif</h1>
@@ -115,7 +109,7 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                             </CardContent>
                         </Card>
 
-                        <Card className="border-l-4 border-l-rose-500 shadow-sm hover:shadow-md transition-shadow bg-rose-50/30 dark:bg-rose-950/20">
+                        <Card className="border-l-4 border-l-rose-500 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Tenggat Waktu Dekat</CardTitle>
                                 <AlertTriangle className="h-4 w-4 text-rose-500" />
@@ -163,7 +157,7 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                             </CardContent>
                         </Card>
 
-                        <Card className="lg:col-span-2 shadow-sm bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-slate-900 border-indigo-100 dark:border-indigo-900/50">
+                        <Card className="lg:col-span-2 shadow-sm">
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2"><Wallet className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/> Tinjauan Finansial</CardTitle>
                                 <CardDescription>Akumulasi nilai dari seluruh pengadaan tercatat.</CardDescription>
@@ -192,7 +186,7 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         
                         <Card className="shadow-sm border-rose-200 dark:border-rose-900/50">
-                            <CardHeader className="bg-rose-50/50 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/30 rounded-t-xl pb-4">
+                            <CardHeader className="bg-rose-50/30 dark:bg-rose-950/10 border-b border-rose-100 dark:border-rose-900/30 rounded-t-xl pb-4">
                                 <CardTitle className="text-lg flex items-center gap-2 text-rose-700 dark:text-rose-400">
                                     <Clock className="h-5 w-5"/> Perhatian Khusus (Mendesak)
                                 </CardTitle>
@@ -299,7 +293,7 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                 </main>
                 
                 <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 mt-12">
-                    <div className="max-w-7xl mx-auto px-4 text-center">
+                    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 text-center">
                         <p className="text-sm text-slate-500 flex items-center justify-center gap-2">
                             <Activity className="h-4 w-4 opacity-50" />
                             SIPengadaan &copy; {new Date().getFullYear()} - Sistem Informasi Monitoring Pengadaan
