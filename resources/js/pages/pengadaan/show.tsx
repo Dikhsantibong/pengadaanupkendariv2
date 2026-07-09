@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Clock, FileText, Lock, TrendingUp, Wrench, Users, Calendar, Landmark, AlertTriangle, Wallet, Building2, Receipt } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, Lock, TrendingUp, Wrench, Users, Calendar, Landmark, AlertTriangle, Wallet, Building2, Receipt, ExternalLink, Link2 } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -24,6 +24,7 @@ type ChecklistItem = {
     is_optional: boolean;
     checked_at: string | null;
     checked_by_user?: { name: string } | null;
+    link_dokumen?: string | null;
 };
 
 type AsmenUser = { id: number; name: string; role: string };
@@ -376,8 +377,53 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
     const perencanaanChecked = perencanaanItems.filter(c => c.is_checked).length;
     const pelaksanaanChecked = pelaksanaanItems.filter(c => c.is_checked).length;
 
-    const handleToggle = (checklistId: number) => {
-        router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, { preserveScroll: true });
+    // State untuk inline link input dialog
+    const [linkDialogId, setLinkDialogId] = useState<number | null>(null);
+    const [linkValue, setLinkValue] = useState('');
+    const [linkError, setLinkError] = useState('');
+    const [linkSubmitting, setLinkSubmitting] = useState(false);
+
+    const handleToggle = (checklistId: number, isCurrentlyChecked: boolean) => {
+        if (isCurrentlyChecked) {
+            // Uncheck → langsung POST tanpa input link
+            router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, { preserveScroll: true });
+        } else {
+            // Check → buka inline input link
+            setLinkDialogId(checklistId);
+            setLinkValue('');
+            setLinkError('');
+        }
+    };
+
+    const handleConfirmToggle = () => {
+        if (!linkValue.trim()) {
+            setLinkError('Link dokumen Nextcloud wajib diisi.');
+            return;
+        }
+        try {
+            new URL(linkValue);
+        } catch {
+            setLinkError('Format link harus berupa URL yang valid (contoh: https://...).');
+            return;
+        }
+        setLinkSubmitting(true);
+        router.post(`/pengadaan/${pengadaan.id}/checklist/${linkDialogId}/toggle`, {
+            link_dokumen: linkValue,
+        }, {
+            preserveScroll: true,
+            onFinish: () => {
+                setLinkDialogId(null);
+                setLinkValue('');
+                setLinkError('');
+                setLinkSubmitting(false);
+            },
+        });
+    };
+
+    const handleCancelLink = () => {
+        setLinkDialogId(null);
+        setLinkValue('');
+        setLinkError('');
     };
 
     const canTogglePerencanaan = (userRole === 'perencana' && pengadaan.status === 'perencanaan');
@@ -476,15 +522,47 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                         <CardContent>
                             <div className="flex flex-col gap-1">
                                 {perencanaanItems.map((item, idx) => (
-                                    <div key={item.id} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'}`}>
-                                        <Checkbox id={`p-${item.id}`} checked={item.is_checked} disabled={!canTogglePerencanaan} onCheckedChange={() => handleToggle(item.id)} />
-                                        <label htmlFor={`p-${item.id}`} className={`flex-1 text-sm cursor-pointer select-none ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>
-                                            {idx + 1}. {item.nama}
-                                            {item.is_optional && (
-                                                <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
-                                            )}
-                                        </label>
-                                        {!canTogglePerencanaan && !item.is_checked && pengadaan.status !== 'perencanaan' && <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                                    <div key={item.id} className="flex flex-col">
+                                        <div className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'}`}>
+                                            <Checkbox id={`p-${item.id}`} checked={item.is_checked} disabled={!canTogglePerencanaan || linkDialogId === item.id} onCheckedChange={() => handleToggle(item.id, item.is_checked)} />
+                                            <div className="flex-1 min-w-0">
+                                                <label htmlFor={`p-${item.id}`} className={`text-sm cursor-pointer select-none block ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>
+                                                    {idx + 1}. {item.nama}
+                                                    {item.is_optional && (
+                                                        <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
+                                                    )}
+                                                </label>
+                                                {item.is_checked && item.link_dokumen && (
+                                                    <a href={item.link_dokumen} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 mt-0.5 hover:underline">
+                                                        <Link2 className="h-3 w-3" />
+                                                        <span className="truncate max-w-[200px]">{item.link_dokumen.replace(/^https?:\/\//, '')}</span>
+                                                        <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                            {!canTogglePerencanaan && !item.is_checked && pengadaan.status !== 'perencanaan' && <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                                        </div>
+                                        {/* Inline link input dialog */}
+                                        {linkDialogId === item.id && (
+                                            <div className="mx-3 mb-2 mt-1 p-3 rounded-lg border border-sky-200 bg-sky-50/50 dark:border-sky-800 dark:bg-sky-950/30 animate-in slide-in-from-top-1 duration-200">
+                                                <Label className="text-xs font-semibold text-sky-700 dark:text-sky-300 mb-1.5 block">Link Dokumen Nextcloud</Label>
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        value={linkValue}
+                                                        onChange={e => { setLinkValue(e.target.value); setLinkError(''); }}
+                                                        onKeyDown={e => e.key === 'Enter' && handleConfirmToggle()}
+                                                        placeholder="https://nextcloud.example.com/..."
+                                                        className={`flex-1 h-8 text-sm ${linkError ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
+                                                        autoFocus
+                                                    />
+                                                    <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white" onClick={handleConfirmToggle} disabled={linkSubmitting}>
+                                                        {linkSubmitting ? 'Menyimpan...' : 'Centang'}
+                                                    </Button>
+                                                    <Button size="sm" variant="ghost" className="h-8" onClick={handleCancelLink}>Batal</Button>
+                                                </div>
+                                                {linkError && <p className="text-xs text-red-500 mt-1">{linkError}</p>}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -512,15 +590,47 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                             ) : (
                                 <div className="flex flex-col gap-1">
                                     {pelaksanaanItems.map((item, idx) => (
-                                        <div key={item.id} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'}`}>
-                                            <Checkbox id={`e-${item.id}`} checked={item.is_checked} disabled={!canTogglePelaksanaan} onCheckedChange={() => handleToggle(item.id)} />
-                                            <label htmlFor={`e-${item.id}`} className={`flex-1 text-sm cursor-pointer select-none ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>
-                                                {idx + 1}. {item.nama}
-                                                {item.is_optional && (
-                                                    <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
-                                                )}
-                                            </label>
-                                            {item.is_checked && item.checked_by_user && <span className="text-xs text-muted-foreground">oleh {item.checked_by_user.name}</span>}
+                                        <div key={item.id} className="flex flex-col">
+                                            <div className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${item.is_checked ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : 'hover:bg-muted/50'}`}>
+                                                <Checkbox id={`e-${item.id}`} checked={item.is_checked} disabled={!canTogglePelaksanaan || linkDialogId === item.id} onCheckedChange={() => handleToggle(item.id, item.is_checked)} />
+                                                <div className="flex-1 min-w-0">
+                                                    <label htmlFor={`e-${item.id}`} className={`text-sm cursor-pointer select-none block ${item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'}`}>
+                                                        {idx + 1}. {item.nama}
+                                                        {item.is_optional && (
+                                                            <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
+                                                        )}
+                                                    </label>
+                                                    {item.is_checked && item.link_dokumen && (
+                                                        <a href={item.link_dokumen} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 mt-0.5 hover:underline">
+                                                            <Link2 className="h-3 w-3" />
+                                                            <span className="truncate max-w-[200px]">{item.link_dokumen.replace(/^https?:\/\//, '')}</span>
+                                                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                {item.is_checked && item.checked_by_user && <span className="text-xs text-muted-foreground whitespace-nowrap">oleh {item.checked_by_user.name}</span>}
+                                            </div>
+                                            {/* Inline link input dialog */}
+                                            {linkDialogId === item.id && (
+                                                <div className="mx-3 mb-2 mt-1 p-3 rounded-lg border border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-950/30 animate-in slide-in-from-top-1 duration-200">
+                                                    <Label className="text-xs font-semibold text-orange-700 dark:text-orange-300 mb-1.5 block">Link Dokumen Nextcloud</Label>
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            value={linkValue}
+                                                            onChange={e => { setLinkValue(e.target.value); setLinkError(''); }}
+                                                            onKeyDown={e => e.key === 'Enter' && handleConfirmToggle()}
+                                                            placeholder="https://nextcloud.example.com/..."
+                                                            className={`flex-1 h-8 text-sm ${linkError ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
+                                                            autoFocus
+                                                        />
+                                                        <Button size="sm" className="h-8 bg-orange-600 hover:bg-orange-700 text-white" onClick={handleConfirmToggle} disabled={linkSubmitting}>
+                                                            {linkSubmitting ? 'Menyimpan...' : 'Centang'}
+                                                        </Button>
+                                                        <Button size="sm" variant="ghost" className="h-8" onClick={handleCancelLink}>Batal</Button>
+                                                    </div>
+                                                    {linkError && <p className="text-xs text-red-500 mt-1">{linkError}</p>}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

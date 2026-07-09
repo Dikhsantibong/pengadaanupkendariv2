@@ -197,10 +197,28 @@ class PengadaanController extends Controller
             }
         }
 
-        $checklist->is_checked = !$checklist->is_checked;
-        $checklist->checked_at = $checklist->is_checked ? now() : null;
-        $checklist->checked_by = $checklist->is_checked ? $user->id : null;
-        $checklist->save();
+        // Jika sedang uncheck (sudah tercentang → mau di-uncheck)
+        if ($checklist->is_checked) {
+            $checklist->is_checked = false;
+            $checklist->checked_at = null;
+            $checklist->checked_by = null;
+            $checklist->link_dokumen = null;
+            $checklist->save();
+        } else {
+            // Mencentang → wajib isi link dokumen
+            $request->validate([
+                'link_dokumen' => 'required|url',
+            ], [
+                'link_dokumen.required' => 'Link dokumen Nextcloud wajib diisi sebelum mencentang.',
+                'link_dokumen.url' => 'Format link harus berupa URL yang valid (contoh: https://...).',
+            ]);
+
+            $checklist->is_checked = true;
+            $checklist->checked_at = now();
+            $checklist->checked_by = $user->id;
+            $checklist->link_dokumen = $request->link_dokumen;
+            $checklist->save();
+        }
 
         $pengadaan->recalculateProgress();
 
