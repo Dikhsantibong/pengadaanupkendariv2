@@ -205,11 +205,10 @@ class PengadaanController extends Controller
             $checklist->link_dokumen = null;
             $checklist->save();
         } else {
-            // Mencentang → wajib isi link dokumen
+            // Mencentang → link dokumen opsional, tapi jika diisi harus URL valid
             $request->validate([
-                'link_dokumen' => 'required|url',
+                'link_dokumen' => 'nullable|url',
             ], [
-                'link_dokumen.required' => 'Link dokumen Nextcloud wajib diisi sebelum mencentang.',
                 'link_dokumen.url' => 'Format link harus berupa URL yang valid (contoh: https://...).',
             ]);
 
@@ -225,6 +224,36 @@ class PengadaanController extends Controller
         return back();
     }
 
+    public function updateChecklistLink(Request $request, Pengadaan $pengadaan, PengadaanChecklist $checklist)
+    {
+        $user = $request->user();
+
+        if ($user->isAsmen() || $user->isManager()) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah link checklist.');
+        }
+
+        if ($user->role === 'perencana' && $checklist->fase !== 'perencanaan') {
+            return back()->with('error', 'Perencana hanya dapat mengubah checklist perencanaan.');
+        } elseif ($user->role === 'pelaksana' && $checklist->fase !== 'pelaksanaan') {
+            return back()->with('error', 'Pelaksana hanya dapat mengubah checklist pelaksanaan.');
+        }
+
+        if (!$checklist->is_checked) {
+            return back()->with('error', 'Checklist harus dicentang terlebih dahulu sebelum menambahkan link.');
+        }
+
+        $request->validate([
+            'link_dokumen' => 'required|url',
+        ], [
+            'link_dokumen.required' => 'Link dokumen wajib diisi.',
+            'link_dokumen.url' => 'Format link harus berupa URL yang valid (contoh: https://...).',
+        ]);
+
+        $checklist->link_dokumen = $request->link_dokumen;
+        $checklist->save();
+
+        return back()->with('success', 'Link dokumen berhasil disimpan.');
+    }
     public function dashboardPerencana()
     {
         $stats = [
@@ -501,5 +530,91 @@ class PengadaanController extends Controller
     {
         $request->user()->unreadNotifications->markAsRead();
         return response()->json(['success' => true]);
+    }
+
+    public function publicDashboard()
+    {
+        $stats = [
+            'total' => Pengadaan::count(),
+            'perencanaan' => Pengadaan::where('status', 'perencanaan')->count(),
+            'pelaksanaan' => Pengadaan::where('status', 'pelaksanaan')->count(),
+            'selesai' => Pengadaan::where('status', 'selesai')->count(),
+            'total_nilai' => Pengadaan::sum('hps_nilai') ?? 0,
+            'total_saving' => Pengadaan::whereNotNull('hpe_nilai')
+                ->whereNotNull('nilai_terkontrak')
+                ->selectRaw('SUM(COALESCE(hpe_nilai, 0) - COALESCE(nilai_terkontrak, 0)) as total')
+                ->value('total') ?? 0,
+            'near_deadline' => Pengadaan::where('status', '!=', 'selesai')
+                ->whereNotNull('tanggal_selesai')
+                ->where('tanggal_selesai', '<=', now()->addDays(7))
+                ->count(),
+        ];
+
+        // Hitung distribusi status untuk chart
+        $statusDistribution = [
+            'perencanaan' => $stats['perencanaan'],
+            'pelaksanaan' => $stats['pelaksanaan'],
+            'selesai' => $stats['selesai'],
+        ];
+
+        // Ambil proyek berjalan (pelaksanaan)
+        $activeProjects = Pengadaan::with('tujuanUnit')
+            ->where('status', 'pelaksanaan')
+            ->orderBy('progress', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'nama' => $p->nama,
+                    'unit' => $p->tujuanUnit ? $p->tujuanUnit->name : '-',
+                    'progress' => $p->progress,
+                    'nilai_terkontrak' => $p->nilai_terkontrak,
+                    'vendor' => $p->vendor_pelaksana,
+                    'is_near_deadline' => $p->isNearDeadline(14),
+                ];
+            });
+
+        // Ambil proyek mendesak (kendala/akan berakhir)
+        $urgentProjects = Pengadaan::with('tujuanUnit')
+            ->where('status', '!=', 'selesai')
+            ->whereNotNull('tanggal_selesai')
+            ->where('tanggal_selesai', '<=', now()->addDays(14))
+            ->orderBy('tanggal_selesai', 'asc')
+            ->take(5)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'nama' => $p->nama,
+                    'unit' => $p->tujuanUnit ? $p->tujuanUnit->name : '-',
+                    'status' => $p->status,
+                    'tanggal_selesai' => $p->tanggal_selesai ? $p->tanggal_selesai->format('Y-m-d') : null,
+                    'progress' => $p->progress,
+                ];
+            });
+
+        // Ambil proyek selesai terbaru
+        $completedProjects = Pengadaan::with('tujuanUnit')
+            ->where('status', 'selesai')
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'nama' => $p->nama,
+                    'unit' => $p->tujuanUnit ? $p->tujuanUnit->name : '-',
+                    'nilai_terkontrak' => $p->nilai_terkontrak,
+                ];
+            });
+
+        return Inertia::render('welcome', [
+            'stats' => $stats,
+            'statusDistribution' => $statusDistribution,
+            'activeProjects' => $activeProjects,
+            'urgentProjects' => $urgentProjects,
+            'completedProjects' => $completedProjects,
+        ]);
     }
 }

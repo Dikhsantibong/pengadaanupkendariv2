@@ -4,7 +4,7 @@ use App\Http\Controllers\PengadaanController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
-Route::redirect('/', '/login')->name('home');
+Route::get('/', [PengadaanController::class, 'publicDashboard'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard routing per role
@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Checklist toggle
     Route::post('pengadaan/{pengadaan}/checklist/{checklist}/toggle', [PengadaanController::class, 'toggleChecklist'])->name('pengadaan.checklist.toggle');
+    Route::post('pengadaan/{pengadaan}/checklist/{checklist}/link', [PengadaanController::class, 'updateChecklistLink'])->name('pengadaan.checklist.link');
 
     // Direksi assignment
     Route::post('pengadaan/{pengadaan}/direksi', [PengadaanController::class, 'assignDireksi'])->name('pengadaan.direksi');
