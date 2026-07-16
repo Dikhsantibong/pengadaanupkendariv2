@@ -24,7 +24,6 @@ type ChecklistItem = {
     is_optional: boolean;
     checked_at: string | null;
     checked_by_user?: { name: string } | null;
-    link_dokumen?: string | null;
 };
 
 type AsmenUser = { id: number; name: string; role: string };
@@ -49,6 +48,8 @@ type PengadaanData = {
     nomor_prk: string | null;
     nomor_pr: string | null;
     nomor_po: string | null;
+    link_nextcloud_perencanaan: string | null;
+    link_nextcloud_pelaksanaan: string | null;
     nomor_nota_dinas_manager: string | null;
     metode_pengadaan: string | null;
     nomor_kontrak: string | null;
@@ -142,6 +143,7 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
         nomor_prk: pengadaan.nomor_prk || '',
         nomor_pr: pengadaan.nomor_pr || '',
         nomor_po: pengadaan.nomor_po || '',
+        link_nextcloud_perencanaan: pengadaan.link_nextcloud_perencanaan || '',
         nomor_nota_dinas_manager: pengadaan.nomor_nota_dinas_manager || '',
         metode_pengadaan: pengadaan.metode_pengadaan || '',
     });
@@ -156,7 +158,30 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-600" />Data Perencanaan</CardTitle></CardHeader>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-600" />Data Perencanaan</CardTitle>
+                        <div className="flex items-center gap-2 w-64">
+                            {canEdit ? (
+                                <div className="flex w-full items-center gap-2">
+                                    <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <Input 
+                                        placeholder="Link Folder Nextcloud..." 
+                                        value={form.data.link_nextcloud_perencanaan} 
+                                        onChange={e => form.setData('link_nextcloud_perencanaan', e.target.value)} 
+                                        className="h-8 text-xs bg-slate-50 dark:bg-slate-900" 
+                                    />
+                                </div>
+                            ) : pengadaan.link_nextcloud_perencanaan ? (
+                                <a href={pengadaan.link_nextcloud_perencanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline bg-sky-50 dark:bg-sky-900/30 px-3 py-1.5 rounded-md transition-colors border border-sky-100 dark:border-sky-800">
+                                    <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
+                                </a>
+                            ) : (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5"/> Link Nextcloud belum ada</span>
+                            )}
+                        </div>
+                    </div>
+                </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div><Label>Metode Pengadaan</Label>
@@ -261,6 +286,7 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
     const canEdit = userRole === 'pelaksana';
     const form = useForm({
         hps_nilai: pengadaan.hps_nilai || '',
+        link_nextcloud_pelaksanaan: pengadaan.link_nextcloud_pelaksanaan || '',
         nomor_kontrak: pengadaan.nomor_kontrak || '',
         vendor_pelaksana: pengadaan.vendor_pelaksana || '',
         jenis_kontrak: pengadaan.jenis_kontrak || '',
@@ -306,7 +332,30 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
 
             {/* Kontrak & Keuangan */}
             <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-emerald-600" />Kontrak & Keuangan</CardTitle></CardHeader>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-emerald-600" />Kontrak & Keuangan</CardTitle>
+                        <div className="flex items-center gap-2 w-64">
+                            {canEdit ? (
+                                <div className="flex w-full items-center gap-2">
+                                    <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <Input 
+                                        placeholder="Link Folder Nextcloud..." 
+                                        value={form.data.link_nextcloud_pelaksanaan} 
+                                        onChange={e => form.setData('link_nextcloud_pelaksanaan', e.target.value)} 
+                                        className="h-8 text-xs bg-slate-50 dark:bg-slate-900" 
+                                    />
+                                </div>
+                            ) : pengadaan.link_nextcloud_pelaksanaan ? (
+                                <a href={pengadaan.link_nextcloud_pelaksanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline bg-orange-50 dark:bg-orange-900/30 px-3 py-1.5 rounded-md transition-colors border border-orange-100 dark:border-orange-800">
+                                    <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
+                                </a>
+                            ) : (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5"/> Link Nextcloud belum ada</span>
+                            )}
+                        </div>
+                    </div>
+                </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div><Label>Nilai HPS</Label><Input type="number" value={form.data.hps_nilai} onChange={e => form.setData('hps_nilai', e.target.value)} disabled={!canEdit} placeholder="0" /></div>
@@ -418,58 +467,8 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
     const perencanaanChecked = perencanaanItems.filter(c => c.is_checked).length;
     const pelaksanaanChecked = pelaksanaanItems.filter(c => c.is_checked).length;
 
-    // State untuk inline link input
-    const [linkDialogId, setLinkDialogId] = useState<number | null>(null);
-    const [linkValue, setLinkValue] = useState('');
-    const [linkError, setLinkError] = useState('');
-    const [linkSubmitting, setLinkSubmitting] = useState(false);
-
     const handleToggle = (checklistId: number, isCurrentlyChecked: boolean) => {
-        if (isCurrentlyChecked) {
-            // Uncheck → langsung POST
-            router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, { preserveScroll: true });
-        } else {
-            // Check → langsung POST tanpa link (opsional)
-            router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, { preserveScroll: true });
-        }
-    };
-
-    // Buka dialog untuk tambah link pada item yang sudah dicentang
-    const handleOpenAddLink = (checklistId: number, existingLink?: string | null) => {
-        setLinkDialogId(checklistId);
-        setLinkValue(existingLink || '');
-        setLinkError('');
-    };
-
-    const handleSaveLink = () => {
-        if (!linkValue.trim()) {
-            setLinkError('Link tidak boleh kosong.');
-            return;
-        }
-        try {
-            new URL(linkValue);
-        } catch {
-            setLinkError('Format link harus berupa URL yang valid (contoh: https://...).');
-            return;
-        }
-        setLinkSubmitting(true);
-        router.post(`/pengadaan/${pengadaan.id}/checklist/${linkDialogId}/link`, {
-            link_dokumen: linkValue,
-        }, {
-            preserveScroll: true,
-            onFinish: () => {
-                setLinkDialogId(null);
-                setLinkValue('');
-                setLinkError('');
-                setLinkSubmitting(false);
-            },
-        });
-    };
-
-    const handleCancelLink = () => {
-        setLinkDialogId(null);
-        setLinkValue('');
-        setLinkError('');
+        router.post(`/pengadaan/${pengadaan.id}/checklist/${checklistId}/toggle`, {}, { preserveScroll: true });
     };
 
     const canTogglePerencanaan = (userRole === 'perencana' && pengadaan.status === 'perencanaan');
@@ -580,46 +579,9 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                                                         <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
                                                     )}
                                                 </label>
-                                                {item.is_checked && item.link_dokumen && (
-                                                    <a href={item.link_dokumen} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 mt-0.5 hover:underline">
-                                                        <Link2 className="h-3 w-3" />
-                                                        <span className="truncate max-w-[200px]">{item.link_dokumen.replace(/^https?:\/\//, '')}</span>
-                                                        <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                                                    </a>
-                                                )}
-                                                {item.is_checked && !item.link_dokumen && (
-                                                    <div className="inline-flex items-center gap-1 mt-0.5">
-                                                        <AlertCircle className="h-3 w-3 text-amber-500" />
-                                                        <span className="text-xs text-amber-600 dark:text-amber-400">Link Nextcloud belum ada</span>
-                                                        {canTogglePerencanaan && (
-                                                            <button type="button" onClick={() => handleOpenAddLink(item.id)} className="text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 underline ml-1">Tambah Link</button>
-                                                        )}
-                                                    </div>
-                                                )}
                                             </div>
                                             {!canTogglePerencanaan && !item.is_checked && pengadaan.status !== 'perencanaan' && <Lock className="h-3.5 w-3.5 text-muted-foreground/50" />}
                                         </div>
-                                        {/* Inline link input */}
-                                        {linkDialogId === item.id && (
-                                            <div className="mx-3 mb-2 mt-1 p-3 rounded-lg border border-sky-200 bg-sky-50/50 dark:border-sky-800 dark:bg-sky-950/30 animate-in slide-in-from-top-1 duration-200">
-                                                <Label className="text-xs font-semibold text-sky-700 dark:text-sky-300 mb-1.5 block">Link Dokumen Nextcloud</Label>
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        value={linkValue}
-                                                        onChange={e => { setLinkValue(e.target.value); setLinkError(''); }}
-                                                        onKeyDown={e => e.key === 'Enter' && handleSaveLink()}
-                                                        placeholder="https://nextcloud.example.com/..."
-                                                        className={`flex-1 h-8 text-sm ${linkError ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
-                                                        autoFocus
-                                                    />
-                                                    <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white" onClick={handleSaveLink} disabled={linkSubmitting}>
-                                                        {linkSubmitting ? 'Menyimpan...' : 'Simpan'}
-                                                    </Button>
-                                                    <Button size="sm" variant="ghost" className="h-8" onClick={handleCancelLink}>Batal</Button>
-                                                </div>
-                                                {linkError && <p className="text-xs text-red-500 mt-1">{linkError}</p>}
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -657,46 +619,9 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                                                             <span className="text-xs text-muted-foreground font-normal ml-1">(Opsional)</span>
                                                         )}
                                                     </label>
-                                                    {item.is_checked && item.link_dokumen && (
-                                                        <a href={item.link_dokumen} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 mt-0.5 hover:underline">
-                                                            <Link2 className="h-3 w-3" />
-                                                            <span className="truncate max-w-[200px]">{item.link_dokumen.replace(/^https?:\/\//, '')}</span>
-                                                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                                                        </a>
-                                                    )}
-                                                    {item.is_checked && !item.link_dokumen && (
-                                                        <div className="inline-flex items-center gap-1 mt-0.5">
-                                                            <AlertCircle className="h-3 w-3 text-amber-500" />
-                                                            <span className="text-xs text-amber-600 dark:text-amber-400">Link Nextcloud belum ada</span>
-                                                            {canTogglePelaksanaan && (
-                                                                <button type="button" onClick={() => handleOpenAddLink(item.id)} className="text-xs text-orange-600 hover:text-orange-700 dark:text-orange-400 underline ml-1">Tambah Link</button>
-                                                            )}
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 {item.is_checked && item.checked_by_user && <span className="text-xs text-muted-foreground whitespace-nowrap">oleh {item.checked_by_user.name}</span>}
                                             </div>
-                                            {/* Inline link input */}
-                                            {linkDialogId === item.id && (
-                                                <div className="mx-3 mb-2 mt-1 p-3 rounded-lg border border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-950/30 animate-in slide-in-from-top-1 duration-200">
-                                                    <Label className="text-xs font-semibold text-orange-700 dark:text-orange-300 mb-1.5 block">Link Dokumen Nextcloud</Label>
-                                                    <div className="flex gap-2">
-                                                        <Input
-                                                            value={linkValue}
-                                                            onChange={e => { setLinkValue(e.target.value); setLinkError(''); }}
-                                                            onKeyDown={e => e.key === 'Enter' && handleSaveLink()}
-                                                            placeholder="https://nextcloud.example.com/..."
-                                                            className={`flex-1 h-8 text-sm ${linkError ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
-                                                            autoFocus
-                                                        />
-                                                        <Button size="sm" className="h-8 bg-orange-600 hover:bg-orange-700 text-white" onClick={handleSaveLink} disabled={linkSubmitting}>
-                                                            {linkSubmitting ? 'Menyimpan...' : 'Simpan'}
-                                                        </Button>
-                                                        <Button size="sm" variant="ghost" className="h-8" onClick={handleCancelLink}>Batal</Button>
-                                                    </div>
-                                                    {linkError && <p className="text-xs text-red-500 mt-1">{linkError}</p>}
-                                                </div>
-                                            )}
                                         </div>
                                     ))}
                                 </div>

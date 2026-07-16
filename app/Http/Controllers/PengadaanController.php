@@ -125,6 +125,8 @@ class PengadaanController extends Controller
             'jaminan_bank_berlaku_sampai' => 'nullable|date|after_or_equal:jaminan_bank_berlaku_mulai',
             'pemeliharaan_durasi_hari' => 'nullable|integer|min:1',
             'pemeliharaan_keterangan' => 'nullable|string',
+            'link_nextcloud_perencanaan' => 'nullable|url',
+            'link_nextcloud_pelaksanaan' => 'nullable|url',
         ]);
 
         // Validate amandemen must be created 14 days before contract ends
@@ -206,20 +208,11 @@ class PengadaanController extends Controller
             $checklist->is_checked = false;
             $checklist->checked_at = null;
             $checklist->checked_by = null;
-            $checklist->link_dokumen = null;
             $checklist->save();
         } else {
-            // Mencentang → link dokumen opsional, tapi jika diisi harus URL valid
-            $request->validate([
-                'link_dokumen' => 'nullable|url',
-            ], [
-                'link_dokumen.url' => 'Format link harus berupa URL yang valid (contoh: https://...).',
-            ]);
-
             $checklist->is_checked = true;
             $checklist->checked_at = now();
             $checklist->checked_by = $user->id;
-            $checklist->link_dokumen = $request->link_dokumen;
             $checklist->save();
         }
 
@@ -228,36 +221,6 @@ class PengadaanController extends Controller
         return back();
     }
 
-    public function updateChecklistLink(Request $request, Pengadaan $pengadaan, PengadaanChecklist $checklist)
-    {
-        $user = $request->user();
-
-        if ($user->isAsmen() || $user->isManager()) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah link checklist.');
-        }
-
-        if ($user->role === 'perencana' && $checklist->fase !== 'perencanaan') {
-            return back()->with('error', 'Perencana hanya dapat mengubah checklist perencanaan.');
-        } elseif ($user->role === 'pelaksana' && $checklist->fase !== 'pelaksanaan') {
-            return back()->with('error', 'Pelaksana hanya dapat mengubah checklist pelaksanaan.');
-        }
-
-        if (!$checklist->is_checked) {
-            return back()->with('error', 'Checklist harus dicentang terlebih dahulu sebelum menambahkan link.');
-        }
-
-        $request->validate([
-            'link_dokumen' => 'required|url',
-        ], [
-            'link_dokumen.required' => 'Link dokumen wajib diisi.',
-            'link_dokumen.url' => 'Format link harus berupa URL yang valid (contoh: https://...).',
-        ]);
-
-        $checklist->link_dokumen = $request->link_dokumen;
-        $checklist->save();
-
-        return back()->with('success', 'Link dokumen berhasil disimpan.');
-    }
     public function dashboardPerencana()
     {
         $stats = [
@@ -536,17 +499,41 @@ class PengadaanController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function publicDashboard()
+    public function publicDashboard(Request $request)
     {
+        $filterTime = $request->query('finansial_filter', 'all');
+
+        $queryNilai = Pengadaan::query();
+        $querySaving = Pengadaan::whereNotNull('hpe_nilai')->whereNotNull('nilai_terkontrak');
+
+        if ($filterTime === 'month') {
+            $queryNilai->whereMonth('tanggal_selesai', now()->month)
+                       ->whereYear('tanggal_selesai', now()->year);
+            $querySaving->whereMonth('tanggal_selesai', now()->month)
+                        ->whereYear('tanggal_selesai', now()->year);
+        } elseif ($filterTime === 'semester') {
+            $semester = now()->month <= 6 ? 1 : 2;
+            $startMonth = $semester === 1 ? 1 : 7;
+            $endMonth = $semester === 1 ? 6 : 12;
+            
+            $queryNilai->whereMonth('tanggal_selesai', '>=', $startMonth)
+                       ->whereMonth('tanggal_selesai', '<=', $endMonth)
+                       ->whereYear('tanggal_selesai', now()->year);
+            $querySaving->whereMonth('tanggal_selesai', '>=', $startMonth)
+                        ->whereMonth('tanggal_selesai', '<=', $endMonth)
+                        ->whereYear('tanggal_selesai', now()->year);
+        } elseif ($filterTime === 'year') {
+            $queryNilai->whereYear('tanggal_selesai', now()->year);
+            $querySaving->whereYear('tanggal_selesai', now()->year);
+        }
+
         $stats = [
             'total' => Pengadaan::count(),
             'perencanaan' => Pengadaan::where('status', 'perencanaan')->count(),
             'pelaksanaan' => Pengadaan::where('status', 'pelaksanaan')->count(),
             'selesai' => Pengadaan::where('status', 'selesai')->count(),
-            'total_nilai' => Pengadaan::sum('hps_nilai') ?? 0,
-            'total_saving' => Pengadaan::whereNotNull('hpe_nilai')
-                ->whereNotNull('nilai_terkontrak')
-                ->selectRaw('SUM(COALESCE(hpe_nilai, 0) - COALESCE(nilai_terkontrak, 0)) as total')
+            'total_nilai' => $queryNilai->sum('hps_nilai') ?? 0,
+            'total_saving' => $querySaving->selectRaw('SUM(COALESCE(hpe_nilai, 0) - COALESCE(nilai_terkontrak, 0)) as total')
                 ->value('total') ?? 0,
             'near_deadline' => Pengadaan::where('status', '!=', 'selesai')
                 ->whereNotNull('tanggal_selesai')
@@ -599,7 +586,7 @@ class PengadaanController extends Controller
             });
 
         // Ambil proyek selesai terbaru
-        $completedProjects = Pengadaan::with('tujuanUnit')
+        $completedProjects = Pengadaan::with(['tujuanUnit', 'direksiUsers'])
             ->where('status', 'selesai')
             ->orderBy('updated_at', 'desc')
             ->take(5)
@@ -610,6 +597,7 @@ class PengadaanController extends Controller
                     'nama' => $p->nama,
                     'unit' => $p->tujuanUnit ? $p->tujuanUnit->name : '-',
                     'nilai_terkontrak' => $p->nilai_terkontrak,
+                    'direksi' => $p->direksiUsers->map(fn($u) => $u->name)->toArray(),
                 ];
             });
 
@@ -619,6 +607,7 @@ class PengadaanController extends Controller
             'activeProjects' => $activeProjects,
             'urgentProjects' => $urgentProjects,
             'completedProjects' => $completedProjects,
+            'finansialFilter' => $filterTime,
         ]);
     }
 }

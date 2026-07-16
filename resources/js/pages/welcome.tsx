@@ -1,7 +1,8 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LayoutDashboard, FileText, CheckCircle2, TrendingUp, AlertTriangle, Wallet, Building2, Clock, Activity, BarChart3, Briefcase, Users } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Project = {
     id: number;
@@ -13,6 +14,7 @@ type Project = {
     is_near_deadline?: boolean;
     status?: string;
     tanggal_selesai?: string | null;
+    direksi?: string[];
 };
 
 type Props = {
@@ -33,9 +35,10 @@ type Props = {
     activeProjects: Project[];
     urgentProjects: Project[];
     completedProjects: Project[];
+    finansialFilter: string;
 };
 
-export default function Welcome({ stats, statusDistribution, activeProjects, urgentProjects, completedProjects }: Props) {
+export default function Welcome({ stats, statusDistribution, activeProjects, urgentProjects, completedProjects, finansialFilter }: Props) {
     const formatRupiah = (angka: number | null | undefined) => {
         if (angka == null) return '-';
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(angka);
@@ -158,9 +161,24 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                         </Card>
 
                         <Card className="lg:col-span-2 shadow-sm">
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2"><Wallet className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/> Tinjauan Finansial</CardTitle>
-                                <CardDescription>Akumulasi nilai dari seluruh pengadaan tercatat.</CardDescription>
+                            <CardHeader className="flex flex-row items-start justify-between">
+                                <div>
+                                    <CardTitle className="text-lg flex items-center gap-2"><Wallet className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/> Tinjauan Finansial</CardTitle>
+                                    <CardDescription>Akumulasi nilai dari seluruh pengadaan tercatat.</CardDescription>
+                                </div>
+                                <div className="w-32">
+                                    <Select value={finansialFilter} onValueChange={(val) => router.get('/', { finansial_filter: val }, { preserveScroll: true })}>
+                                        <SelectTrigger className="h-8 text-xs">
+                                            <SelectValue placeholder="Filter Waktu" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua Waktu</SelectItem>
+                                            <SelectItem value="year">Tahun Ini</SelectItem>
+                                            <SelectItem value="semester">Semester Ini</SelectItem>
+                                            <SelectItem value="month">Bulan Ini</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
@@ -277,7 +295,12 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                                         <div key={project.id} className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
                                             <div>
                                                 <h3 className="font-medium text-slate-900 dark:text-white line-clamp-2 mb-2 leading-snug">{project.nama}</h3>
-                                                <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md"><Building2 className="h-3 w-3"/> {project.unit}</span>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md w-fit"><Building2 className="h-3 w-3"/> {project.unit}</span>
+                                                    {project.direksi && project.direksi.length > 0 && (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md w-fit mt-1"><Users className="h-3 w-3"/> Direksi: {project.direksi.join(', ')}</span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="mt-4 pt-3 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
                                                 <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-none">Selesai</Badge>
