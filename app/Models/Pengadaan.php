@@ -16,7 +16,6 @@ class Pengadaan extends Model
         'hps_nilai', 'nomor_kontrak', 'vendor_pelaksana', 'jenis_kontrak', 'tahap_bayar', 'nilai_terkontrak',
         'tanggal_mulai', 'tanggal_selesai',
         'amandemen_keterangan', 'amandemen_tanggal', 'amandemen_tanggal_mulai',
-        'link_nextcloud_perencanaan', 'link_nextcloud_pelaksanaan',
         'jaminan_bank_nama', 'jaminan_bank_nomor', 'jaminan_bank_nilai', 'jaminan_bank_berlaku_sampai', 'jaminan_bank_berlaku_mulai',
         'pemeliharaan_durasi_hari', 'pemeliharaan_mulai', 'pemeliharaan_selesai', 'pemeliharaan_keterangan',
     ];

@@ -89,6 +89,8 @@ class PengadaanController extends Controller
             'pengadaan' => $pengadaan,
             'asmenUsers' => $asmenUsers,
             'powerPlants' => $powerPlants,
+            'nextcloudLinkPerencanaan' => env('NEXTCLOUD_LINK_PERENCANAAN', '#'),
+            'nextcloudLinkPelaksanaan' => env('NEXTCLOUD_LINK_PELAKSANAAN', '#'),
         ]);
     }
 
@@ -125,8 +127,6 @@ class PengadaanController extends Controller
             'jaminan_bank_berlaku_sampai' => 'nullable|date|after_or_equal:jaminan_bank_berlaku_mulai',
             'pemeliharaan_durasi_hari' => 'nullable|integer|min:1',
             'pemeliharaan_keterangan' => 'nullable|string',
-            'link_nextcloud_perencanaan' => 'nullable|url',
-            'link_nextcloud_pelaksanaan' => 'nullable|url',
         ]);
 
         // Validate amandemen must be created 14 days before contract ends

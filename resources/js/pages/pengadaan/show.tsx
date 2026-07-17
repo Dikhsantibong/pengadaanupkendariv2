@@ -48,8 +48,8 @@ type PengadaanData = {
     nomor_prk: string | null;
     nomor_pr: string | null;
     nomor_po: string | null;
-    link_nextcloud_perencanaan: string | null;
-    link_nextcloud_pelaksanaan: string | null;
+    nomor_po: string | null;
+    nomor_nota_dinas_manager: string | null;
     nomor_nota_dinas_manager: string | null;
     metode_pengadaan: string | null;
     nomor_kontrak: string | null;
@@ -72,7 +72,13 @@ type PengadaanData = {
     pemeliharaan_keterangan: string | null;
 };
 
-type Props = { pengadaan: PengadaanData; asmenUsers: AsmenUser[]; powerPlants: PowerPlant[] };
+type Props = { 
+    pengadaan: PengadaanData; 
+    asmenUsers: AsmenUser[]; 
+    powerPlants: PowerPlant[];
+    nextcloudLinkPerencanaan: string;
+    nextcloudLinkPelaksanaan: string;
+};
 
 const statusColors: Record<string, string> = {
     perencanaan: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
@@ -143,7 +149,6 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
         nomor_prk: pengadaan.nomor_prk || '',
         nomor_pr: pengadaan.nomor_pr || '',
         nomor_po: pengadaan.nomor_po || '',
-        link_nextcloud_perencanaan: pengadaan.link_nextcloud_perencanaan || '',
         nomor_nota_dinas_manager: pengadaan.nomor_nota_dinas_manager || '',
         metode_pengadaan: pengadaan.metode_pengadaan || '',
     });
@@ -159,28 +164,7 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-600" />Data Perencanaan</CardTitle>
-                        <div className="flex items-center gap-2 w-64">
-                            {canEdit ? (
-                                <div className="flex w-full items-center gap-2">
-                                    <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <Input 
-                                        placeholder="Link Folder Nextcloud..." 
-                                        value={form.data.link_nextcloud_perencanaan} 
-                                        onChange={e => form.setData('link_nextcloud_perencanaan', e.target.value)} 
-                                        className="h-8 text-xs bg-slate-50 dark:bg-slate-900" 
-                                    />
-                                </div>
-                            ) : pengadaan.link_nextcloud_perencanaan ? (
-                                <a href={pengadaan.link_nextcloud_perencanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline bg-sky-50 dark:bg-sky-900/30 px-3 py-1.5 rounded-md transition-colors border border-sky-100 dark:border-sky-800">
-                                    <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
-                                </a>
-                            ) : (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5"/> Link Nextcloud belum ada</span>
-                            )}
-                        </div>
-                    </div>
+                    <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-600" />Data Perencanaan</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -286,7 +270,6 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
     const canEdit = userRole === 'pelaksana';
     const form = useForm({
         hps_nilai: pengadaan.hps_nilai || '',
-        link_nextcloud_pelaksanaan: pengadaan.link_nextcloud_pelaksanaan || '',
         nomor_kontrak: pengadaan.nomor_kontrak || '',
         vendor_pelaksana: pengadaan.vendor_pelaksana || '',
         jenis_kontrak: pengadaan.jenis_kontrak || '',
@@ -333,28 +316,7 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
             {/* Kontrak & Keuangan */}
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-emerald-600" />Kontrak & Keuangan</CardTitle>
-                        <div className="flex items-center gap-2 w-64">
-                            {canEdit ? (
-                                <div className="flex w-full items-center gap-2">
-                                    <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <Input 
-                                        placeholder="Link Folder Nextcloud..." 
-                                        value={form.data.link_nextcloud_pelaksanaan} 
-                                        onChange={e => form.setData('link_nextcloud_pelaksanaan', e.target.value)} 
-                                        className="h-8 text-xs bg-slate-50 dark:bg-slate-900" 
-                                    />
-                                </div>
-                            ) : pengadaan.link_nextcloud_pelaksanaan ? (
-                                <a href={pengadaan.link_nextcloud_pelaksanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline bg-orange-50 dark:bg-orange-900/30 px-3 py-1.5 rounded-md transition-colors border border-orange-100 dark:border-orange-800">
-                                    <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
-                                </a>
-                            ) : (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5"/> Link Nextcloud belum ada</span>
-                            )}
-                        </div>
-                    </div>
+                    <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5 text-emerald-600" />Kontrak & Keuangan</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -457,7 +419,7 @@ function PelaksanaanDataSection({ pengadaan, userRole }: { pengadaan: PengadaanD
     );
 }
 
-export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Props) {
+export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants, nextcloudLinkPerencanaan, nextcloudLinkPelaksanaan }: Props) {
     const page = usePage();
     const userRole = (page.props.auth as any)?.user?.role;
 
@@ -561,9 +523,16 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                                     <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-sky-600" />Checklist Perencanaan</CardTitle>
                                     <CardDescription className="mt-1">{perencanaanChecked}/{perencanaanItems.length} item selesai</CardDescription>
                                 </div>
-                                {perencanaanChecked === perencanaanItems.length && perencanaanItems.length > 0 && (
-                                    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"><CheckCircle2 className="mr-1 h-3 w-3" />Selesai</Badge>
-                                )}
+                                <div className="flex items-center gap-3">
+                                    {nextcloudLinkPerencanaan && nextcloudLinkPerencanaan !== '#' && (
+                                        <a href={nextcloudLinkPerencanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline bg-sky-50 dark:bg-sky-900/30 px-3 py-1.5 rounded-md transition-colors border border-sky-100 dark:border-sky-800">
+                                            <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
+                                        </a>
+                                    )}
+                                    {perencanaanChecked === perencanaanItems.length && perencanaanItems.length > 0 && (
+                                        <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"><CheckCircle2 className="mr-1 h-3 w-3" />Selesai</Badge>
+                                    )}
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -596,9 +565,16 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants }: Pr
                                     <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-orange-600" />Checklist Pelaksanaan</CardTitle>
                                     <CardDescription className="mt-1">{pelaksanaanChecked}/{pelaksanaanItems.length} item selesai</CardDescription>
                                 </div>
-                                {pelaksanaanChecked === pelaksanaanItems.length && pelaksanaanItems.length > 0 && (
-                                    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"><CheckCircle2 className="mr-1 h-3 w-3" />Selesai</Badge>
-                                )}
+                                <div className="flex items-center gap-3">
+                                    {nextcloudLinkPelaksanaan && nextcloudLinkPelaksanaan !== '#' && (
+                                        <a href={nextcloudLinkPelaksanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline bg-orange-50 dark:bg-orange-900/30 px-3 py-1.5 rounded-md transition-colors border border-orange-100 dark:border-orange-800">
+                                            <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
+                                        </a>
+                                    )}
+                                    {pelaksanaanChecked === pelaksanaanItems.length && pelaksanaanItems.length > 0 && (
+                                        <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"><CheckCircle2 className="mr-1 h-3 w-3" />Selesai</Badge>
+                                    )}
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
