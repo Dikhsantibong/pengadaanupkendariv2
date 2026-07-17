@@ -524,7 +524,7 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants, next
                                     <CardDescription className="mt-1">{perencanaanChecked}/{perencanaanItems.length} item selesai</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {nextcloudLinkPerencanaan && nextcloudLinkPerencanaan !== '#' && (
+                                    {nextcloudLinkPerencanaan && (
                                         <a href={nextcloudLinkPerencanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline bg-sky-50 dark:bg-sky-900/30 px-3 py-1.5 rounded-md transition-colors border border-sky-100 dark:border-sky-800">
                                             <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
                                         </a>
@@ -566,7 +566,7 @@ export default function PengadaanShow({ pengadaan, asmenUsers, powerPlants, next
                                     <CardDescription className="mt-1">{pelaksanaanChecked}/{pelaksanaanItems.length} item selesai</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {nextcloudLinkPelaksanaan && nextcloudLinkPelaksanaan !== '#' && (
+                                    {nextcloudLinkPelaksanaan && (
                                         <a href={nextcloudLinkPelaksanaan} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline bg-orange-50 dark:bg-orange-900/30 px-3 py-1.5 rounded-md transition-colors border border-orange-100 dark:border-orange-800">
                                             <Link2 className="h-3.5 w-3.5" /> Buka Nextcloud
                                         </a>
