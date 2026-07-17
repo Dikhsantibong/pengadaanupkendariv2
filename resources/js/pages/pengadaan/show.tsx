@@ -56,8 +56,10 @@ type PengadaanData = {
     vendor_pelaksana: string | null;
     jenis_kontrak: string | null;
     tahap_bayar: string | null;
-    tanggal_mulai: string | null;
     tanggal_selesai: string | null;
+    user_departemen: string | null;
+    progress_status: string | null;
+    pic: string | null;
     amandemen_keterangan: string | null;
     amandemen_tanggal: string | null;
     amandemen_tanggal_mulai: string | null;
@@ -90,7 +92,7 @@ const statusIcons: Record<string, any> = { perencanaan: Clock, pelaksanaan: Tren
 
 const asmenRoleLabels: Record<string, string> = {
     asmen_pemeliharaan: 'Pemeliharaan', asmen_operasi: 'Operasi', asmen_engineering: 'Engineering',
-    asmen_business_support: 'Business Support', asmen_k3: 'K3', asmen_lingkungan: 'Lingkungan',
+    asmen_business_support: 'Business Support', asmen_k3: 'Team Leader K3', asmen_lingkungan: 'Team Leader Lingkungan',
 };
 
 const metodeLabels: Record<string, string> = { surat_pesanan: 'Surat Pesanan', spk: 'SPK', tender: 'Tender' };
@@ -116,19 +118,24 @@ function DireksiSection({ pengadaan, asmenUsers, userRole }: { pengadaan: Pengad
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-indigo-600" />Direksi Pekerjaan</CardTitle>
-                <CardDescription>Penunjukan Asmen sebagai direksi pekerjaan</CardDescription>
+                <CardDescription>Penunjukan Asman sebagai direksi pekerjaan</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {asmenUsers.map(user => (
-                        <div key={user.id} className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${selected.includes(user.id) ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30' : 'hover:bg-muted/50'}`}>
-                            <Checkbox id={`dir-${user.id}`} checked={selected.includes(user.id)} disabled={!canEdit} onCheckedChange={() => toggleUser(user.id)} />
-                            <label htmlFor={`dir-${user.id}`} className="flex-1 cursor-pointer select-none">
-                                <div className="font-medium text-sm">{user.name}</div>
-                                <div className="text-xs text-muted-foreground">{asmenRoleLabels[user.role] || user.role}</div>
-                            </label>
-                        </div>
-                    ))}
+                    {asmenUsers.map(user => {
+                        let displayName = user.name.replace(/Asmen/gi, 'Asman');
+                        if (displayName.toLowerCase() === 'asman lingkungan') displayName = 'Team Leader Lingkungan';
+                        if (displayName.toLowerCase() === 'asman k3') displayName = 'Team Leader K3';
+                        return (
+                            <div key={user.id} className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${selected.includes(user.id) ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30' : 'hover:bg-muted/50'}`}>
+                                <Checkbox id={`dir-${user.id}`} checked={selected.includes(user.id)} disabled={!canEdit} onCheckedChange={() => toggleUser(user.id)} />
+                                <label htmlFor={`dir-${user.id}`} className="flex-1 cursor-pointer select-none">
+                                    <div className="font-medium text-sm">{displayName}</div>
+                                    <div className="text-xs text-muted-foreground">{asmenRoleLabels[user.role] || user.role}</div>
+                                </label>
+                            </div>
+                        );
+                    })}
                 </div>
                 {canEdit && (
                     <Button onClick={handleSave} disabled={saving} className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -151,6 +158,9 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
         nomor_po: pengadaan.nomor_po || '',
         nomor_nota_dinas_manager: pengadaan.nomor_nota_dinas_manager || '',
         metode_pengadaan: pengadaan.metode_pengadaan || '',
+        user_departemen: pengadaan.user_departemen || '',
+        progress_status: pengadaan.progress_status || '',
+        pic: pengadaan.pic || '',
     });
 
     const [tipeNomor, setTipeNomor] = useState<'pr' | 'po'>(pengadaan.nomor_po ? 'po' : 'pr');
@@ -212,6 +222,63 @@ function PerencanaanDataSection({ pengadaan, powerPlants, userRole }: { pengadaa
                                 <SelectContent>
                                     <SelectItem value="AO">AO</SelectItem>
                                     <SelectItem value="AI">AI</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div><Label>User</Label>
+                            <Select
+                                value={form.data.user_departemen}
+                                onValueChange={(value) => form.setData('user_departemen', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih User" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Operasi">Operasi</SelectItem>
+                                    <SelectItem value="Pemeliharaan">Pemeliharaan</SelectItem>
+                                    <SelectItem value="K3kemananan">K3kemananan</SelectItem>
+                                    <SelectItem value="Engineering">Engineering</SelectItem>
+                                    <SelectItem value="Lingkungan">Lingkungan</SelectItem>
+                                    <SelectItem value="Businnes support">Businnes support</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div><Label>PIC</Label>
+                            <Select
+                                value={form.data.pic}
+                                onValueChange={(value) => form.setData('pic', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih PIC" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Hikmatullah">Hikmatullah</SelectItem>
+                                    <SelectItem value="Bastial">Bastial</SelectItem>
+                                    <SelectItem value="Iklan nano">Iklan nano</SelectItem>
+                                    <SelectItem value="Putu wisna">Putu wisna</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div><Label>Progress Status</Label>
+                            <Select
+                                value={form.data.progress_status}
+                                onValueChange={(value) => form.setData('progress_status', value)}
+                                disabled={!canEdit}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih Progress" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Pending">Pending</SelectItem>
+                                    <SelectItem value="Batal">Batal</SelectItem>
+                                    <SelectItem value="Inisiasi laksdan">Inisiasi laksdan</SelectItem>
+                                    <SelectItem value="Penyusunan rks">Penyusunan rks</SelectItem>
+                                    <SelectItem value="Kelengkapan dokumen">Kelengkapan dokumen</SelectItem>
+                                    <SelectItem value="Penawaran harga">Penawaran harga</SelectItem>
+                                    <SelectItem value="Disposisi ams">Disposisi ams</SelectItem>
+                                    <SelectItem value="Proses validasi">Proses validasi</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

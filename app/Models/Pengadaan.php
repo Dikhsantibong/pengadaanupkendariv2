@@ -18,6 +18,7 @@ class Pengadaan extends Model
         'amandemen_keterangan', 'amandemen_tanggal', 'amandemen_tanggal_mulai',
         'jaminan_bank_nama', 'jaminan_bank_nomor', 'jaminan_bank_nilai', 'jaminan_bank_berlaku_sampai', 'jaminan_bank_berlaku_mulai',
         'pemeliharaan_durasi_hari', 'pemeliharaan_mulai', 'pemeliharaan_selesai', 'pemeliharaan_keterangan',
+        'user_departemen', 'progress_status', 'pic',
     ];
 
     protected $casts = [
