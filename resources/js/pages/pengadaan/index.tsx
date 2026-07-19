@@ -401,17 +401,19 @@ export default function PengadaanIndex({ pengadaans, filters, powerPlants }: Pro
                                                 <td className="px-4 py-3 text-muted-foreground">
                                                     {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </td>
-                                                <td className="px-4 py-3 text-right flex justify-end gap-2">
-                                                    <Button variant="ghost" size="sm" asChild>
-                                                        <Link href={`/pengadaan/${item.id}`}>
-                                                            <Eye className="mr-1 h-4 w-4" /> Detail
-                                                        </Link>
-                                                    </Button>
-                                                    {(userRole === 'perencana' || userRole === 'pelaksana') && (
-                                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50">
-                                                            <Trash className="h-4 w-4" />
+                                                <td className="px-4 py-3 text-right align-middle">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button variant="ghost" size="sm" asChild>
+                                                            <Link href={`/pengadaan/${item.id}`}>
+                                                                <Eye className="mr-1 h-4 w-4" /> Detail
+                                                            </Link>
                                                         </Button>
-                                                    )}
+                                                        {(userRole === 'perencana' || userRole === 'pelaksana') && (
+                                                            <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50">
+                                                                <Trash className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
