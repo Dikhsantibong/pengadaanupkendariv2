@@ -555,7 +555,9 @@ class PengadaanController extends Controller
         ];
 
         // Ambil proyek berjalan (pelaksanaan)
-        $activeProjects = Pengadaan::with('tujuanUnit')
+        $activeProjects = Pengadaan::with(['tujuanUnit', 'checklists' => function ($query) {
+                $query->where('is_checked', true)->orderBy('checked_at', 'desc');
+            }])
             ->where('status', 'pelaksanaan')
             ->orderBy('progress', 'desc')
             ->take(10)
@@ -569,11 +571,16 @@ class PengadaanController extends Controller
                     'nilai_terkontrak' => $p->nilai_terkontrak,
                     'vendor' => $p->vendor_pelaksana,
                     'is_near_deadline' => $p->isNearDeadline(14),
+                    'pic' => $p->pic,
+                    'progress_status' => $p->progress_status,
+                    'tahap_terakhir' => $p->checklists->first() ? $p->checklists->first()->nama : 'Belum ada',
                 ];
             });
 
         // Ambil proyek mendesak (kendala/akan berakhir)
-        $urgentProjects = Pengadaan::with('tujuanUnit')
+        $urgentProjects = Pengadaan::with(['tujuanUnit', 'checklists' => function ($query) {
+                $query->where('is_checked', true)->orderBy('checked_at', 'desc');
+            }])
             ->where('status', '!=', 'selesai')
             ->whereNotNull('tanggal_selesai')
             ->where('tanggal_selesai', '<=', now()->addDays(14))
@@ -588,6 +595,9 @@ class PengadaanController extends Controller
                     'status' => $p->status,
                     'tanggal_selesai' => $p->tanggal_selesai ? $p->tanggal_selesai->format('Y-m-d') : null,
                     'progress' => $p->progress,
+                    'pic' => $p->pic,
+                    'progress_status' => $p->progress_status,
+                    'tahap_terakhir' => $p->checklists->first() ? $p->checklists->first()->nama : 'Belum ada',
                 ];
             });
 

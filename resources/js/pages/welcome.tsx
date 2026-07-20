@@ -15,6 +15,9 @@ type Project = {
     status?: string;
     tanggal_selesai?: string | null;
     direksi?: string[];
+    pic?: string | null;
+    progress_status?: string | null;
+    tahap_terakhir?: string | null;
 };
 
 type Props = {
@@ -221,10 +224,19 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                                                         {project.status === 'perencanaan' ? 'Perencanaan' : 'Pelaksanaan'}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex items-center text-sm text-slate-500 mb-3 gap-4">
+                                                <div className="flex flex-wrap items-center text-sm text-slate-500 mb-3 gap-x-4 gap-y-2">
                                                     <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5"/> {project.unit}</span>
                                                     <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium"><Clock className="h-3.5 w-3.5"/> {project.tanggal_selesai}</span>
+                                                    {project.pic && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5"/> PIC: {project.pic}</span>}
+                                                    {project.progress_status && <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5"/> Status: {project.progress_status}</span>}
                                                 </div>
+                                                {project.tahap_terakhir && (
+                                                    <div className="mb-3 flex items-center">
+                                                        <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md line-clamp-1 flex items-center gap-1">
+                                                            <Activity className="h-3 w-3 text-sky-500" /> Tahap Terakhir: {project.tahap_terakhir}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 <div className="space-y-1.5">
                                                     <div className="flex justify-between text-xs text-slate-500">
                                                         <span>Progress</span>
@@ -262,11 +274,20 @@ export default function Welcome({ stats, statusDistribution, activeProjects, urg
                                                     <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-1">{project.nama}</h3>
                                                     <span className="text-sm font-bold text-orange-600 dark:text-orange-400 shrink-0 ml-2">{project.progress}%</span>
                                                 </div>
-                                                <div className="flex flex-wrap items-center text-xs text-slate-500 gap-x-4 gap-y-1 mb-2">
+                                                <div className="flex flex-wrap items-center text-xs text-slate-500 gap-x-4 gap-y-2 mb-2">
                                                     <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5"/> {project.unit}</span>
-                                                    {project.vendor && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5"/> {project.vendor}</span>}
+                                                    {project.vendor && <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5"/> Vendor: {project.vendor}</span>}
                                                     {project.nilai_terkontrak && <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300"><Wallet className="h-3.5 w-3.5 text-emerald-500"/> {formatRupiah(project.nilai_terkontrak)}</span>}
+                                                    {project.pic && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5"/> PIC: {project.pic}</span>}
+                                                    {project.progress_status && <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5"/> Status: {project.progress_status}</span>}
                                                 </div>
+                                                {project.tahap_terakhir && (
+                                                    <div className="mb-2 flex items-center mt-1">
+                                                        <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md line-clamp-1 flex items-center gap-1">
+                                                            <Activity className="h-3 w-3 text-orange-500" /> Tahap Terakhir: {project.tahap_terakhir}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden rounded-full mt-2">
                                                     <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${project.progress}%` }} />
                                                 </div>
